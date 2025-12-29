@@ -1,0 +1,123 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "id": "barapullah-main-drain",
+            "properties": {
+                "name": "Barapullah Drain",
+                "type": "Main Arterial Drain",
+                "description": "Primary storm water outlet for South Delhi, outfalling into the Yamuna near Nizamuddin.",
+                "basin": "Barapullah"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        77.2114,
+                        28.5404
+                    ],
+                    [
+                        77.2257,
+                        28.5600
+                    ],
+                    [
+                        77.2413,
+                        28.5750
+                    ],
+                    [
+                        77.2550,
+                        28.5880
+                    ],
+                    [
+                        77.2613,
+                        28.5920
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "kushak-nallah",
+            "properties": {
+                "name": "Kushak Nallah",
+                "type": "Major Tributary",
+                "description": "Crucial tributary draining areas near R.K. Puram and AIIMS.",
+                "location_landmark": "Kushak Nallah Depot"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        77.1768,
+                        28.5675
+                    ],
+                    [
+                        77.1950,
+                        28.5750
+                    ],
+                    [
+                        77.2150,
+                        28.5820
+                    ],
+                    [
+                        77.2300,
+                        28.5800
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "waterlogging-point-tigri",
+            "properties": {
+                "name": "Tigri Road Risk Point",
+                "type": "Waterlogging Hotspot",
+                "description": "Area identified with frequent drainage congestion.",
+                "latitude": 28.5127,
+                "longitude": 77.2380
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.2380,
+                    28.5127
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "waterlogging-point-ratiya",
+            "properties": {
+                "name": "Ratiya Marg Risk Point",
+                "type": "Waterlogging Hotspot",
+                "description": "High-risk urban drainage point in the upper catchment.",
+                "latitude": 28.5116,
+                "longitude": 77.2491
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.2491,
+                    28.5116
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "nizamuddin-outfall",
+            "properties": {
+                "name": "Barapullah Outfall",
+                "type": "Basin Exit",
+                "description": "Point where the Barapullah system discharges into the Yamuna River."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.2613,
+                    28.5920
+                ]
+            }
+        }
+    ]
+}

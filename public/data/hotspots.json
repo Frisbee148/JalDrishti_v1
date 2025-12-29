@@ -1,0 +1,232 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Minto Bridge (Minto Road)",
+                "description": "Perennial hotspot; rail underpass goes under several feet of water every monsoon.",
+                "type": "chronic",
+                "basin": "Yamuna Direct Catchment"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.2323,
+                    28.6333
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Pul Prahladpur Underpass",
+                "description": "Critical underpass on Mehrauli-Badarpur road, frequently shut due to severe waterlogging.",
+                "type": "chronic",
+                "basin": "Barapullah"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.2831,
+                    28.5025
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Zakhira Flyover Underpass",
+                "description": "Major traffic bottleneck in West Delhi due to poor drainage capacity.",
+                "type": "chronic",
+                "basin": "Najafgarh"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.1612,
+                    28.6678
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Kashmere Gate Metro Station Area",
+                "description": "Low-lying area near Yamuna floodplain and major transport hub.",
+                "type": "chronic",
+                "basin": "Yamuna Direct Catchment"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.2285,
+                    28.6675
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Jahangirpuri Metro Station Road",
+                "description": "Chronic waterlogging point on GT Karnal Road affecting heavy traffic.",
+                "type": "chronic",
+                "basin": "Najafgarh"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.1643,
+                    28.7301
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Loni Road Roundabout (Shahdara)",
+                "description": "Key intersection in East Delhi, frequently inundated due to flat topography.",
+                "type": "chronic",
+                "basin": "Trans-Yamuna (Shahdara)"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.2912,
+                    28.6945
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Ring Road (Opp. WHO Building)",
+                "description": "Critical artery along the Yamuna bank, susceptible to backflow during high river levels.",
+                "type": "chronic",
+                "basin": "Yamuna Direct Catchment"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.2478,
+                    28.6305
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "ITO Ring Road Crossing",
+                "description": "High-traffic zone near old Delhi Police HQs, prone to flooding from drain overflow.",
+                "type": "chronic",
+                "basin": "Yamuna Direct Catchment"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.2494,
+                    28.6289
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Dwarka Sector 21 Underpass",
+                "description": "Airport express line connectivity point, faces drainage issues during heavy rains.",
+                "type": "official",
+                "basin": "Najafgarh"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.0552,
+                    28.5521
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Seelampur Underpass",
+                "description": "Another critical underpass in North-East Delhi that often gets submerged.",
+                "type": "official",
+                "basin": "Trans-Yamuna (Shahdara)"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.2685,
+                    28.6692
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "AIIMS Loop / Aurobindo Marg",
+                "description": "Major hospital access point in South Delhi, faces waterlogging due to clogged local drains.",
+                "type": "official",
+                "basin": "Barapullah"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.2081,
+                    28.5663
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Laxmi Nagar Metro Station Market",
+                "description": "Simulated citizen report: High footfall commercial area with frequent street-level flooding.",
+                "type": "citizen_report",
+                "basin": "Trans-Yamuna (Shahdara)",
+                "verified_by_ai": true
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.2765,
+                    28.6372
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Uttam Nagar East Metro Station",
+                "description": "Simulated citizen report: Congested western suburb road with poor stormwater drainage.",
+                "type": "citizen_report",
+                "basin": "Najafgarh",
+                "verified_by_ai": true
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.0678,
+                    28.6235
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Mayur Vihar Phase 1 (Near ASN School)",
+                "description": "Simulated citizen report: Low-lying residential pocket that accumulates water quickly.",
+                "type": "citizen_report",
+                "basin": "Trans-Yamuna (Shahdara)",
+                "verified_by_ai": true
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.2951,
+                    28.6054
+                ]
+            }
+        }
+    ]
+}

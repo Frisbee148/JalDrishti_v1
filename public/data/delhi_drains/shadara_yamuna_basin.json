@@ -1,0 +1,219 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "id": "shahdara-drain-no-1",
+            "properties": {
+                "name": "Drain No. I",
+                "description": "Starts from North of arterial highway, follows Banthala drain course.",
+                "catchment_area": "9407 acres",
+                "type": "Arterial Drain"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        77.2650,
+                        28.7450
+                    ],
+                    [
+                        77.2750,
+                        28.7150
+                    ],
+                    [
+                        77.2850,
+                        28.6750
+                    ],
+                    [
+                        77.3000,
+                        28.6350
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "shahdara-drain-no-2",
+            "properties": {
+                "name": "Drain No. II",
+                "description": "Starts from North of G.T. road near U.P. border.",
+                "type": "Arterial Drain"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        77.3350,
+                        28.6900
+                    ],
+                    [
+                        77.3200,
+                        28.6650
+                    ],
+                    [
+                        77.3000,
+                        28.6350
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "ghazipur-drain",
+            "properties": {
+                "name": "Ghazipur Drain (Combined I & II)",
+                "description": "Formed at the junction of Drain I & II near road 56/57. Falls into Yamuna d/s of Okhla Barrage.",
+                "outfall_point": "Village Chalera, U.P."
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        77.3000,
+                        28.6350
+                    ],
+                    [
+                        77.3150,
+                        28.6100
+                    ],
+                    [
+                        77.3250,
+                        28.5850
+                    ],
+                    [
+                        77.3100,
+                        28.5550
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "shahdara-marginal-bund",
+            "properties": {
+                "name": "Shahdara Marginal Bund",
+                "length": "39,200 ft (11.95 Km)",
+                "description": "Protects basin from Yamuna floods. Contains regulator at RD-0."
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        77.2450,
+                        28.7450
+                    ],
+                    [
+                        77.2480,
+                        28.7100
+                    ],
+                    [
+                        77.2550,
+                        28.6750
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "hindan-cut-canal",
+            "properties": {
+                "name": "Hindan Cut Canal",
+                "description": "Eastern boundary for specific drainage blocks. Runs from Nov to June."
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        77.3500,
+                        28.6500
+                    ],
+                    [
+                        77.3300,
+                        28.6250
+                    ],
+                    [
+                        77.3150,
+                        28.5750
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "navin-shahdara",
+            "properties": {
+                "name": "Navin Shahdara",
+                "description": "Low lying area requiring pumping to Sham Lal College pond."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.2880,
+                    28.6780
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "shastri-park",
+            "properties": {
+                "name": "Shastri Park",
+                "description": "Drained by Gokulpur drain; prone to flooding when Yamuna R.L. exceeds 664.00 ft."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.2550,
+                    28.6720
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "khichripur-drain",
+            "properties": {
+                "name": "Khichripur Drain",
+                "description": "Relieves local depression in Khichripur; outfalls into Ghazipur drain."
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        77.3050,
+                        28.6180
+                    ],
+                    [
+                        77.3150,
+                        28.6100
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "disused-channel",
+            "properties": {
+                "name": "Disused Channel",
+                "description": "Main recipient for drains South of G.T. Road (Geeta Colony, Patparganj)."
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        77.2650,
+                        28.6650
+                    ],
+                    [
+                        77.2850,
+                        28.6500
+                    ],
+                    [
+                        77.3000,
+                        28.6350
+                    ]
+                ]
+            }
+        }
+    ]
+}

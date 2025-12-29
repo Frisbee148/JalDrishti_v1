@@ -1,0 +1,232 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "id": "najafgarh-main-drain",
+            "properties": {
+                "name": "Najafgarh Drain",
+                "description": "Main drainage outlet for the basin, 38.5 miles in length[cite: 545].",
+                "capacity_dhansa": "3000 cusecs [cite: 108, 470]",
+                "capacity_outfall": "10400 cusecs [cite: 555]",
+                "flow_direction": "South-West to North-East outfall into Yamuna [cite: 85, 543]"
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        76.8782,
+                        28.5142
+                    ],
+                    [
+                        76.9535,
+                        28.5630
+                    ],
+                    [
+                        77.0396,
+                        28.6115
+                    ],
+                    [
+                        77.1085,
+                        28.6644
+                    ],
+                    [
+                        77.1528,
+                        28.7042
+                    ],
+                    [
+                        77.2345,
+                        28.7145
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "najafgarh-jheel",
+            "properties": {
+                "name": "Najafgarh Jheel",
+                "area": "10 Sq. km [cite: 96]",
+                "description": "Natural depression receiving spill from Delhi, Haryana, and Rajasthan[cite: 98, 411].",
+                "max_level_1964": "R.L. 695.60 [cite: 102]"
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            76.9021,
+                            28.4855
+                        ],
+                        [
+                            76.9455,
+                            28.4880
+                        ],
+                        [
+                            76.9592,
+                            28.5135
+                        ],
+                        [
+                            76.9421,
+                            28.5388
+                        ],
+                        [
+                            76.8855,
+                            28.5201
+                        ],
+                        [
+                            76.9021,
+                            28.4855
+                        ]
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "mungeshpur-drain",
+            "properties": {
+                "name": "Mungeshpur Drain",
+                "origin": "Mundora village, Haryana [cite: 624]",
+                "design_discharge": "1820 cusecs at outfall [cite: 666]",
+                "description": "Joins Najafgarh drain below Kakrola regulator[cite: 624]."
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        76.9150,
+                        28.7550
+                    ],
+                    [
+                        76.9500,
+                        28.6800
+                    ],
+                    [
+                        77.0430,
+                        28.6150
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "palam-drain",
+            "properties": {
+                "name": "Palam Drain",
+                "catchment_area": "20 Sq. miles [cite: 688]",
+                "design_discharge": "3042 cusecs [cite: 695]",
+                "description": "Joins Najafgarh drain U/s of Kakrola regulator[cite: 683]."
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        77.1550,
+                        28.5300
+                    ],
+                    [
+                        77.1000,
+                        28.5800
+                    ],
+                    [
+                        77.0450,
+                        28.6080
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "kakrola-regulator",
+            "properties": {
+                "name": "Kakrola Regulator",
+                "location": "RD 65000 [cite: 459]",
+                "capacity": "4000 cusecs [cite: 497]",
+                "sill_level": "RL 681.0 [cite: 105]"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.0396,
+                    28.6115
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "dhansa-bund",
+            "properties": {
+                "name": "Dhansa Bund & Regulator",
+                "design_flood_level": "RL 698.0 [cite: 603]",
+                "description": "Control structure at the entry of the Najafgarh outfall channel[cite: 543]."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    76.8782,
+                    28.5142
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "mundela-khurd-scheme",
+            "properties": {
+                "name": "Mundela Khurd Drainage Scheme",
+                "proposed_bund": "RL 699.0, 6ft height [cite: 427, 819]",
+                "regulator_capacity": "10 cusecs [cite: 429]",
+                "description": "To restrict overflow of storm water from Haryana[cite: 427]."
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        76.8700,
+                        28.5700
+                    ],
+                    [
+                        76.8850,
+                        28.5750
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "bagrola-scheme",
+            "properties": {
+                "name": "Bagrola Drainage Scheme",
+                "description": "Proposed to relieve stagnation in Bagrola and surrounding villages[cite: 317, 318]."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.0650,
+                    28.5600
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "brijwasan-scheme",
+            "properties": {
+                "name": "Brijwasan Drainage Scheme",
+                "description": "Drain from Delhi-Gurgaon Road culvert to Najafgarh drain[cite: 328]."
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        77.0600,
+                        28.5050
+                    ],
+                    [
+                        77.0200,
+                        28.5250
+                    ]
+                ]
+            }
+        }
+    ]
+}
