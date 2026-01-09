@@ -1,18 +1,57 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { MapboxView } from "@/components/map/MapboxView";
 import { RainfallSlider } from "@/components/dashboard/RainfallSlider";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 function DashboardContent() {
     const [rainfall, setRainfall] = useState(0);
+    const [reports, setReports] = useState<any[]>([]);
     const searchParams = useSearchParams();
+    const router = useRouter();
     const hasNewReport = searchParams.get("report") === "success";
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+
+        // Ensure user is logged in
+        if (!token) {
+            router.push("/login");
+            return;
+        }
+
+        fetch("http://localhost:8000/reports", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        })
+            .then(res => {
+                if (res.status === 401) {
+                    localStorage.removeItem("token");
+                    router.push("/login");
+                    throw new Error("Unauthorized");
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (!Array.isArray(data)) {
+                    console.error("Expected array of reports, got:", data);
+                    return;
+                }
+                // Filter: Not Rejected, Not Spam (unless confirmed real by admin)
+                const validReports = data.filter((r: any) =>
+                    r.admin_status !== "rejected" &&
+                    (!r.is_spam || r.admin_status === "approved")
+                );
+                setReports(validReports);
+            })
+            .catch(err => console.error(err));
+    }, [router]);
 
     return (
         <div className="relative w-full h-[calc(100vh)] bg-background overflow-hidden">
-            <MapboxView rainfallIntensity={rainfall} />
+            <MapboxView rainfallIntensity={rainfall} liveReports={reports} />
 
             {/* Overlay controls */}
             <RainfallSlider intensity={rainfall} onIntensityChange={setRainfall} />

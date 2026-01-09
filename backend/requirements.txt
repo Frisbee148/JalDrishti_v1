@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+opencv-python
+numpy
+python-multipart
+pillow
+azure-cognitiveservices-vision-computervision
+azure-cognitiveservices-search-visualsearch
+python-dotenv
+imagehash
+google-search-results
+requests
+sqlalchemy
+sqlmodel
+passlib[bcrypt]
+python-jose[cryptography]

@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Droplets, Map, AlertTriangle, History, Info } from "lucide-react";
+import { Droplets, Map, AlertTriangle, History, Info, Users, Shield } from "lucide-react";
 import { cn } from "@/components/ui/Button";
 
 const navItems = [
     { href: "/dashboard", label: "Live Map", icon: Map },
     { href: "/reports", label: "Report Incident", icon: AlertTriangle },
-    // { href: "/dashboard/history", label: "Analysis History", icon: History },
+    { href: "/community", label: "Community Feed", icon: Users },
+    { href: "/admin", label: "Admin Panel", icon: Shield },
 ];
 
 export function Sidebar() {
