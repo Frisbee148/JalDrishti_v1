@@ -27,17 +27,8 @@ const BASIN_FILES = [
     "/data/delhi_drains/shadara_yamuna_basin.json"
 ];
 
-// Helper: Calculate vulnerability score from Shape_Area (1-10)
-const getVulnerabilityExpression = (): mapboxgl.Expression => [
-    "min",
-    10,
-    ["max", 1, ["round", ["*", 10, ["/", ["get", "Shape_Area"], 0.05]]]]
-];
-
-// Helper: Calculate risk score based on vulnerability and rainfall
-const calculateRiskScore = (vulnerability: number, rainfallIntensity: number): number => {
-    return Math.round((vulnerability * rainfallIntensity) / 10);
-};
+// Max rainfall for slider (mm/hr)
+const MAX_RAINFALL = 120;
 
 export function MapboxView({ rainfallIntensity }: MapboxViewProps) {
     const mapContainer = useRef<HTMLDivElement>(null);
@@ -57,9 +48,9 @@ export function MapboxView({ rainfallIntensity }: MapboxViewProps) {
 
         map.current = new mapboxgl.Map({
             container: mapContainer.current,
-            style: "mapbox://styles/mapbox/light-v11",
-            center: [77.1025, 28.7041], // Delhi center
-            zoom: 10.5,
+            style: "mapbox://styles/mapbox/standard", // Standard style for 3D buildings
+            center: [77.2090, 28.6139], // Delhi center
+            zoom: 12,
             pitch: 60,
             bearing: -20,
             antialias: true,
@@ -88,88 +79,46 @@ export function MapboxView({ rainfallIntensity }: MapboxViewProps) {
             });
             m.setTerrain({ source: "mapbox-dem", exaggeration: 1.5 });
 
-            // Add Fog (Atmosphere) - Peach theme
-            m.setFog({
-                "range": [0.5, 10],
-                "color": "#ffdfba",
-                "horizon-blend": 0.3,
-                "high-color": "#ffadad",
-                "space-color": "#4a2c2a",
-                "star-intensity": 0.6
-            });
-
-            // Find label layer for proper stacking
-            const layers = m.getStyle().layers;
-            const labelLayerId = layers?.find(
-                (layer) => layer.type === 'symbol' && layer.layout?.['text-field']
-            )?.id;
-
             // 2. Load Wards Data Source
             m.addSource("delhi-wards", {
                 type: "geojson",
                 data: WARDS_DATA_URL,
             });
 
-            // 3. Ward Base Layer (fill) - Always visible, shows ward boundaries
+            // 3. Ward Risk Layer (fill-extrusion) - THE WATER VOLUME
+            // This is placed FIRST so buildings render ON TOP of it
             m.addLayer({
-                id: "ward-base",
-                type: "fill",
+                id: "delhi-wards-risk",
+                type: "fill-extrusion",
                 source: "delhi-wards",
                 paint: {
-                    "fill-color": "#e9d5ff", // Light Purple (safe state)
-                    "fill-opacity": 0.7,
+                    "fill-extrusion-color": "#c084fc", // Start at purple (safe)
+                    "fill-extrusion-height": 0,        // Start flat
+                    "fill-extrusion-base": 0,
+                    "fill-extrusion-opacity": 0.6,     // Semi-transparent "water" look
+                    // Smooth transitions
+                    "fill-extrusion-height-transition": { duration: 300, delay: 0 },
+                    "fill-extrusion-color-transition": { duration: 300, delay: 0 },
                 },
             });
 
-            // 4. Ward Outline Layer - Better visibility
+            // 4. 3D Buildings Layer - (Handled natively by 'standard' style)
+            // We do not need to manually add it.
+
+
+            // 5. Ward Outline Layer - For boundary visibility
             m.addLayer({
                 id: "ward-outline",
                 type: "line",
                 source: "delhi-wards",
                 paint: {
-                    "line-color": "#7c3aed",
-                    "line-width": 1,
+                    "line-color": "#6200EA",
+                    "line-width": 1.5,
                     "line-opacity": 0.8,
                 },
             });
 
-            // 5. Water Fill-Extrusion Layer - Blue water that "rises" with rainfall
-            m.addLayer({
-                id: "ward-water",
-                type: "fill-extrusion",
-                source: "delhi-wards",
-                paint: {
-                    "fill-extrusion-color": "#3b82f6", // Blue water color
-                    "fill-extrusion-height": 0, // Starts at 0, grows with rainfall
-                    "fill-extrusion-base": 0,
-                    "fill-extrusion-opacity": 0, // Start invisible
-                    // Transitions for smooth animation
-                    "fill-extrusion-height-transition": { duration: 500, delay: 0 },
-                    "fill-extrusion-opacity-transition": { duration: 300, delay: 0 },
-                    "fill-extrusion-color-transition": { duration: 300, delay: 0 },
-                },
-            }, labelLayerId);
-
-            // 6. 3D Buildings Layer
-            m.addLayer(
-                {
-                    'id': '3d-buildings',
-                    'source': 'composite',
-                    'source-layer': 'building',
-                    'filter': ['==', 'extrude', 'true'],
-                    'type': 'fill-extrusion',
-                    'minzoom': 13,
-                    'paint': {
-                        'fill-extrusion-color': '#a78bfa', // Lighter purple for buildings
-                        'fill-extrusion-height': ['get', 'height'],
-                        'fill-extrusion-base': ['get', 'min_height'],
-                        'fill-extrusion-opacity': 0.7
-                    }
-                },
-                labelLayerId
-            );
-
-            // 7. Load Drains Basins (Lines)
+            // 6. Load Drains Basins (Lines)
             BASIN_FILES.forEach((file, index) => {
                 const sourceId = `basin-${index}`;
                 m.addSource(sourceId, { type: "geojson", data: file });
@@ -201,7 +150,7 @@ export function MapboxView({ rainfallIntensity }: MapboxViewProps) {
                 });
             });
 
-            // 8. Load Hotspots (Custom Markers)
+            // 7. Load Hotspots (Custom Markers)
             fetch(HOTSPOTS_DATA_URL)
                 .then(res => res.json())
                 .then(data => {
@@ -233,55 +182,59 @@ export function MapboxView({ rainfallIntensity }: MapboxViewProps) {
                 })
                 .catch(err => console.error("Failed to load hotspots", err));
 
-            // 9. Ward Click Handler for Popup
-            m.on('click', 'ward-base', (e) => {
+            // 8. Ward Click Handler - Live PSI Calculation
+            m.on('click', 'delhi-wards-risk', (e) => {
                 if (!e.features || e.features.length === 0) return;
                 const feature = e.features[0];
                 const props = feature.properties || {};
 
-                // Get ward name (try multiple property names)
+                // Get ward name
                 const wardName = props.Ward_Name || props.name || props.NAME || `Ward ${props.Ward_No || 'Unknown'}`;
 
-                // Calculate vulnerability from Shape_Area
+                // Calculate vulnerability_score from Shape_Area (1-10 scale)
                 const shapeArea = props.Shape_Area || 0.01;
-                const vulnerability = Math.min(10, Math.max(1, Math.round(10 * shapeArea / 0.05)));
+                const vulnerabilityScore = Math.min(10, Math.max(1, Math.round(10 * shapeArea / 0.05)));
 
-                // Get current rainfall from component state (we'll update this in the effect)
+                // Get current rainfall from window
                 const currentRainfall = (window as any).__currentRainfallIntensity || 0;
-                const riskScore = calculateRiskScore(vulnerability, currentRainfall);
+
+                // Live PSI: (vulnerability_score * (rainfall / MAX_RAINFALL) * 10)
+                const livePSI = (vulnerabilityScore * (currentRainfall / MAX_RAINFALL) * 10).toFixed(1);
 
                 // Determine risk level
-                let riskLevel = "Low";
-                let riskColor = "#22c55e"; // green
-                if (riskScore > 70) {
+                const psiNum = parseFloat(livePSI);
+                let riskLevel = "Safe";
+                let riskColor = "#22c55e";
+                if (psiNum > 7) {
                     riskLevel = "Critical";
-                    riskColor = "#ef4444"; // red
-                } else if (riskScore > 40) {
+                    riskColor = "#ef4444";
+                } else if (psiNum > 5) {
                     riskLevel = "High";
-                    riskColor = "#f59e0b"; // amber
-                } else if (riskScore > 20) {
+                    riskColor = "#f59e0b";
+                } else if (psiNum > 3) {
                     riskLevel = "Moderate";
-                    riskColor = "#eab308"; // yellow
+                    riskColor = "#eab308";
                 }
 
                 popup.current?.setLngLat(e.lngLat)
                     .setHTML(`
-                        <div style="padding: 12px; min-width: 200px;">
-                            <h3 style="font-weight: bold; font-size: 16px; margin-bottom: 8px; color: #1e293b;">${wardName}</h3>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <div style="padding: 12px; min-width: 220px; font-family: system-ui;">
+                            <h4 style="font-weight: bold; font-size: 16px; margin: 0 0 12px 0; color: #1e293b;">${wardName}</h4>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                                 <span style="color: #64748b;">Vulnerability:</span>
-                                <span style="font-weight: 600; color: #7c3aed;">${vulnerability}/10</span>
+                                <span style="font-weight: 600; color: #6200EA;">${vulnerabilityScore}/10</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                                <span style="color: #64748b;">Current Rainfall:</span>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="color: #64748b;">Rainfall:</span>
                                 <span style="font-weight: 600;">${currentRainfall} mm/hr</span>
                             </div>
+                            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 10px 0;"/>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="color: #64748b;">Risk Score:</span>
-                                <span style="font-weight: bold; font-size: 18px; color: ${riskColor};">${riskScore}</span>
+                                <span style="color: #64748b;">Live Severity Index:</span>
+                                <span style="font-weight: bold; font-size: 20px; color: ${riskColor};">${livePSI}/10</span>
                             </div>
-                            <div style="margin-top: 8px; padding: 6px 12px; background: ${riskColor}20; border-radius: 4px; text-align: center;">
-                                <span style="color: ${riskColor}; font-weight: 600;">${riskLevel} Risk</span>
+                            <div style="margin-top: 10px; padding: 8px; background: ${riskColor}15; border-radius: 6px; text-align: center; border: 1px solid ${riskColor}40;">
+                                <span style="color: ${riskColor}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${riskLevel}</span>
                             </div>
                         </div>
                     `)
@@ -289,10 +242,10 @@ export function MapboxView({ rainfallIntensity }: MapboxViewProps) {
             });
 
             // Change cursor on hover
-            m.on('mouseenter', 'ward-base', () => {
+            m.on('mouseenter', 'delhi-wards-risk', () => {
                 m.getCanvas().style.cursor = 'pointer';
             });
-            m.on('mouseleave', 'ward-base', () => {
+            m.on('mouseleave', 'delhi-wards-risk', () => {
                 m.getCanvas().style.cursor = '';
             });
         });
@@ -308,7 +261,7 @@ export function MapboxView({ rainfallIntensity }: MapboxViewProps) {
         };
     }, []);
 
-    // Update layers based on Rainfall Intensity
+    // Update ward risk layer based on Rainfall Intensity
     useEffect(() => {
         if (!map.current || !mapLoaded) return;
         const m = map.current;
@@ -316,54 +269,44 @@ export function MapboxView({ rainfallIntensity }: MapboxViewProps) {
         // Store current rainfall for popup access
         (window as any).__currentRainfallIntensity = rainfallIntensity;
 
-        if (!m.getLayer("ward-base") || !m.getLayer("ward-water")) return;
+        if (!m.getLayer("delhi-wards-risk")) return;
 
-        const intensityFactor = rainfallIntensity / 100; // 0 to 1
+        // 1. Dynamic Height: vulnerability_score * rainfall * 2
+        // vulnerability_score is derived from Shape_Area (1-10)
+        const waterHeight: mapboxgl.Expression = [
+            "*",
+            ["min", 10, ["max", 1, ["round", ["*", 10, ["/", ["get", "Shape_Area"], 0.05]]]]],
+            rainfallIntensity * 2 // Direct multiplication for visual exaggeration
+        ];
+        m.setPaintProperty("delhi-wards-risk", "fill-extrusion-height", waterHeight);
 
-        // 1. Update Ward Base Color (Purple -> Amber -> Red based on intensity)
-        const wardColor: mapboxgl.Expression = [
+        // 2. Color Morphing: Purple (Safe) -> Yellow (Warning) -> Red (Critical)
+        // Use rainfall intensity directly in the expression
+        const intensityFactor = rainfallIntensity / MAX_RAINFALL; // 0 to 1
+
+        const riskColor: mapboxgl.Expression = [
             "interpolate",
             ["linear"],
             ["literal", intensityFactor],
-            0, "#e9d5ff",     // Light Purple (safe)
-            0.3, "#c084fc",   // Medium Purple
-            0.5, "#f59e0b",   // Amber (warning)
-            0.8, "#f97316",   // Orange
-            1.0, "#ef4444"    // Red (critical)
+            0, "#c084fc",     // Purple (Safe)
+            0.3, "#a855f7",   // Darker Purple
+            0.5, "#facc15",   // Yellow (Warning)
+            0.75, "#f97316",  // Orange
+            1.0, "#ef4444"    // Red (Critical)
         ];
-        m.setPaintProperty("ward-base", "fill-color", wardColor);
-        m.setPaintProperty("ward-base", "fill-opacity", 0.5 + (intensityFactor * 0.4));
+        m.setPaintProperty("delhi-wards-risk", "fill-extrusion-color", riskColor);
 
-        // 2. Handle Water Extrusion - EXPLICIT ZERO when no rainfall
-        if (rainfallIntensity === 0) {
-            // Completely hide water at zero rainfall
-            m.setPaintProperty("ward-water", "fill-extrusion-height", 0);
-            m.setPaintProperty("ward-water", "fill-extrusion-opacity", 0);
-        } else {
-            // Calculate water height based on vulnerability × rainfall
-            // Height expression: vulnerability_score (derived from Shape_Area) × rainfall × multiplier
-            const waterHeight: mapboxgl.Expression = [
-                "*",
-                ["min", 10, ["max", 1, ["round", ["*", 10, ["/", ["get", "Shape_Area"], 0.05]]]]],
-                intensityFactor * 50 // Max height ~500m at full intensity for max vulnerability
-            ];
-            m.setPaintProperty("ward-water", "fill-extrusion-height", waterHeight);
-
-            // Water color transitions from light blue to deep blue
-            const waterColor: mapboxgl.Expression = [
-                "interpolate",
-                ["linear"],
-                ["literal", intensityFactor],
-                0, "#93c5fd",     // Light Blue
-                0.5, "#3b82f6",   // Blue
-                1.0, "#1d4ed8"    // Deep Blue
-            ];
-            m.setPaintProperty("ward-water", "fill-extrusion-color", waterColor);
-
-            // Keep opacity low for translucency (buildings visible through water)
-            // Max opacity 0.4 to ensure buildings are visible
-            m.setPaintProperty("ward-water", "fill-extrusion-opacity", Math.min(0.4, 0.15 + (intensityFactor * 0.25)));
-        }
+        // 3. Opacity Control: 0 at start (invisible) -> 0.6 max
+        // This ensures "dry state" looks like a normal map
+        const opacityExpression: mapboxgl.Expression = [
+            "interpolate",
+            ["linear"],
+            ["literal", intensityFactor],
+            0, 0,      // Invisible at 0
+            0.1, 0.4,  // Quickly becomes visible
+            1.0, 0.6   // Max opacity
+        ];
+        m.setPaintProperty("delhi-wards-risk", "fill-extrusion-opacity", opacityExpression);
 
     }, [rainfallIntensity, mapLoaded]);
 
