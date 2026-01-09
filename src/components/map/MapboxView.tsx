@@ -142,7 +142,11 @@ export function MapboxView({ rainfallIntensity }: MapboxViewProps) {
                     "fill-extrusion-color": "#3b82f6", // Blue water color
                     "fill-extrusion-height": 0, // Starts at 0, grows with rainfall
                     "fill-extrusion-base": 0,
-                    "fill-extrusion-opacity": 0.6,
+                    "fill-extrusion-opacity": 0, // Start invisible
+                    // Transitions for smooth animation
+                    "fill-extrusion-height-transition": { duration: 500, delay: 0 },
+                    "fill-extrusion-opacity-transition": { duration: 300, delay: 0 },
+                    "fill-extrusion-color-transition": { duration: 300, delay: 0 },
                 },
             }, labelLayerId);
 
@@ -330,28 +334,36 @@ export function MapboxView({ rainfallIntensity }: MapboxViewProps) {
         m.setPaintProperty("ward-base", "fill-color", wardColor);
         m.setPaintProperty("ward-base", "fill-opacity", 0.5 + (intensityFactor * 0.4));
 
-        // 2. Update Water Extrusion Height (grows with rainfall × vulnerability)
-        // Height expression: vulnerability_score (derived from Shape_Area) × rainfall × multiplier
-        const waterHeight: mapboxgl.Expression = [
-            "*",
-            ["min", 10, ["max", 1, ["round", ["*", 10, ["/", ["get", "Shape_Area"], 0.05]]]]],
-            intensityFactor * 50 // Max height ~500m at full intensity for max vulnerability
-        ];
-        m.setPaintProperty("ward-water", "fill-extrusion-height", waterHeight);
+        // 2. Handle Water Extrusion - EXPLICIT ZERO when no rainfall
+        if (rainfallIntensity === 0) {
+            // Completely hide water at zero rainfall
+            m.setPaintProperty("ward-water", "fill-extrusion-height", 0);
+            m.setPaintProperty("ward-water", "fill-extrusion-opacity", 0);
+        } else {
+            // Calculate water height based on vulnerability × rainfall
+            // Height expression: vulnerability_score (derived from Shape_Area) × rainfall × multiplier
+            const waterHeight: mapboxgl.Expression = [
+                "*",
+                ["min", 10, ["max", 1, ["round", ["*", 10, ["/", ["get", "Shape_Area"], 0.05]]]]],
+                intensityFactor * 50 // Max height ~500m at full intensity for max vulnerability
+            ];
+            m.setPaintProperty("ward-water", "fill-extrusion-height", waterHeight);
 
-        // 3. Update Water Color (Light blue -> Deep blue based on intensity)
-        const waterColor: mapboxgl.Expression = [
-            "interpolate",
-            ["linear"],
-            ["literal", intensityFactor],
-            0, "#93c5fd",     // Light Blue
-            0.5, "#3b82f6",   // Blue
-            1.0, "#1d4ed8"    // Deep Blue
-        ];
-        m.setPaintProperty("ward-water", "fill-extrusion-color", waterColor);
+            // Water color transitions from light blue to deep blue
+            const waterColor: mapboxgl.Expression = [
+                "interpolate",
+                ["linear"],
+                ["literal", intensityFactor],
+                0, "#93c5fd",     // Light Blue
+                0.5, "#3b82f6",   // Blue
+                1.0, "#1d4ed8"    // Deep Blue
+            ];
+            m.setPaintProperty("ward-water", "fill-extrusion-color", waterColor);
 
-        // 4. Update Water Opacity (more visible at higher rainfall)
-        m.setPaintProperty("ward-water", "fill-extrusion-opacity", 0.3 + (intensityFactor * 0.5));
+            // Keep opacity low for translucency (buildings visible through water)
+            // Max opacity 0.4 to ensure buildings are visible
+            m.setPaintProperty("ward-water", "fill-extrusion-opacity", Math.min(0.4, 0.15 + (intensityFactor * 0.25)));
+        }
 
     }, [rainfallIntensity, mapLoaded]);
 
