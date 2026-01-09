@@ -31,7 +31,7 @@ export function RainfallSlider({ intensity, onIntensityChange }: RainfallSliderP
                 <input
                     type="range"
                     min="0"
-                    max="100"
+                    max="120"
                     step="1"
                     value={intensity}
                     onChange={(e) => onIntensityChange(parseInt(e.target.value))}

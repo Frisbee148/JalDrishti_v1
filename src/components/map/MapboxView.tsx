@@ -276,7 +276,7 @@ export function MapboxView({ rainfallIntensity }: MapboxViewProps) {
         const waterHeight: mapboxgl.Expression = [
             "*",
             ["min", 10, ["max", 1, ["round", ["*", 10, ["/", ["get", "Shape_Area"], 0.05]]]]],
-            rainfallIntensity * 2 // Direct multiplication for visual exaggeration
+            rainfallIntensity * 15 // Increased from 2 to 15 for better visual height
         ];
         m.setPaintProperty("delhi-wards-risk", "fill-extrusion-height", waterHeight);
 
