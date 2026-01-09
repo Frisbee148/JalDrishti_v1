@@ -2,16 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Droplets, Map, AlertTriangle, BarChart3, CloudRain, LayoutDashboard, BookOpen } from "lucide-react";
+import { Droplets, Map, AlertTriangle, History, Info, PieChart, ShieldAlert, FileText, Sliders } from "lucide-react";
 import { cn } from "@/components/ui/Button";
 
 const navItems = [
     { href: "/dashboard", label: "Live Map", icon: Map },
-    { href: "/admin", label: "Admin Console", icon: LayoutDashboard },
-    { href: "/analytics", label: "Analytics", icon: BarChart3 },
-    { href: "/simulation", label: "Simulation", icon: CloudRain },
     { href: "/reports", label: "Report Incident", icon: AlertTriangle },
-    { href: "/methodology", label: "Methodology", icon: BookOpen },
+    { href: "/analytics", label: "Analytics", icon: PieChart },
+    { href: "/methodology", label: "Methodology", icon: FileText },
+    { href: "/simulation", label: "Risk Simulator", icon: Sliders },
+    { href: "/admin", label: "Admin Console", icon: ShieldAlert },
 ];
 
 export function Sidebar() {

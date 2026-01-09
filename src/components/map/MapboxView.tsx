@@ -151,6 +151,8 @@ export function MapboxView({ rainfallIntensity }: MapboxViewProps) {
             });
 
             // 7. Load Hotspots (Custom Markers)
+            // 7. Load Hotspots (Custom Markers)
+            /*
             fetch(HOTSPOTS_DATA_URL)
                 .then(res => res.json())
                 .then(data => {
@@ -181,6 +183,7 @@ export function MapboxView({ rainfallIntensity }: MapboxViewProps) {
                     }
                 })
                 .catch(err => console.error("Failed to load hotspots", err));
+            */
 
             // 8. Ward Click Handler - Live PSI Calculation
             m.on('click', 'delhi-wards-risk', (e) => {
