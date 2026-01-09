@@ -103,7 +103,7 @@ export default function SimulationPage() {
     // Trigger prediction when weather changes
     useEffect(() => {
         const timer = setTimeout(() => {
-            predictRainfall();
+            // predictRainfall(); // Disabled as per user request
         }, 500); // Debounce
         return () => clearTimeout(timer);
     }, [temperature, humidity, pressure, cloudCover, modelTrained]);

@@ -16,7 +16,11 @@ const DELHI_BOUNDS = {
 
 export default function ReportsPage() {
     const router = useRouter();
-    const { addIncident } = useIncidents();
+    // const { addIncident } = useIncidents();
+    // FALLBACK: Context disabled by user request. Using mock function to prevent crash.
+    const addIncident = (data: any) => {
+        console.log("Mock addIncident called (IncidentProvider disabled):", data);
+    };
 
     const [step, setStep] = useState<"form" | "uploading" | "success">("form");
 
