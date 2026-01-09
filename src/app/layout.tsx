@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   description: "3D Water-logging Prediction Dashboard",
 };
 
+import { Sidebar } from "@/components/dashboard/Sidebar";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -21,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} antialiased`}
+        className={`${inter.variable} antialiased bg-black text-white`}
       >
         {/* <IncidentProvider> */}
         {children}

@@ -6,7 +6,10 @@ import "mapbox-gl/dist/mapbox-gl.css";
 
 interface MapboxViewProps {
     rainfallIntensity: number;
+    liveReports?: any[];
 }
+
+// ... existing code ...
 
 // Ensure token is set
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
@@ -30,11 +33,60 @@ const BASIN_FILES = [
 // Max rainfall for slider (mm/hr)
 const MAX_RAINFALL = 120;
 
-export function MapboxView({ rainfallIntensity }: MapboxViewProps) {
+export function MapboxView({ rainfallIntensity, liveReports }: MapboxViewProps) {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
     const popup = useRef<mapboxgl.Popup | null>(null);
+    const reportMarkers = useRef<mapboxgl.Marker[]>([]); // Store markers for cleanup
     const [mapLoaded, setMapLoaded] = useState(false);
+
+    // ... existing map init ...
+
+    // New Effect: Render Live Reports
+    useEffect(() => {
+        if (!map.current || !mapLoaded || !liveReports) return;
+        const m = map.current;
+
+        // Cleanup old markers
+        reportMarkers.current.forEach(marker => marker.remove());
+        reportMarkers.current = [];
+
+        liveReports.forEach(report => {
+            const el = createPulsingMarker('citizen_report');
+
+            // Logic: Blue for AI Only, Green for AI + Admin
+            const isFullyVerified = report.admin_status === "approved";
+            const badgeColor = isFullyVerified ? "#10b981" : "#0ea5e9";
+            const badgeText = isFullyVerified ? "Verified by AI & Admin" : "Verified using AI only";
+
+            const badgeHtml = `<span style="background:${badgeColor}; color:white; font-size:10px; padding:3px 6px; border-radius:4px; margin-bottom:6px; display:inline-block; font-weight:600;">${badgeText}</span>`;
+
+            const markerPopup = new mapboxgl.Popup({ offset: 25 })
+                .setHTML(`
+                    <div style="color:black; padding:8px; min-width:200px;">
+                        ${badgeHtml}
+                        <h4 style="font-weight:bold; margin-bottom:4px;">Waterlogging Reported</h4>
+                        <p style="font-size:12px; margin-bottom:8px;">${report.location}</p>
+                        <div style="background:#f1f5f9; padding:6px; border-radius:4px; font-size:11px;">
+                            <p><strong>Severity:</strong> ${report.ai_analysis.severity}</p>
+                            <p><strong>Depth:</strong> ${report.ai_analysis.estimated_depth}</p>
+                            <p><strong>Confidence:</strong> ${report.ai_analysis.confidence}%</p>
+                        </div>
+                         <p style="font-size:10px; color:#64748b; margin-top:8px;">Report ID: ${report.id.slice(0, 6)}</p>
+                    </div>
+                `);
+
+            const marker = new mapboxgl.Marker({ element: el })
+                .setLngLat([report.coordinates.lng, report.coordinates.lat])
+                .setPopup(markerPopup)
+                .addTo(m);
+
+            reportMarkers.current.push(marker);
+        });
+
+    }, [liveReports, mapLoaded]);
+
+    // ... existing effects ...
 
     useEffect(() => {
         if (map.current || !mapContainer.current) return;
