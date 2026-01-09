@@ -8,13 +8,7 @@ import { useIncidents } from "@/context/IncidentContext";
 
 export default function AdminDashboard() {
     const router = useRouter(); // [FIX]
-    // const { incidents, dispatches, resources, updateIncidentStatus, deleteIncident } = useIncidents();
-    // FALLBACK: Context disabled by user request. Using mock data to prevent crash.
-    const incidents: any[] = [];
-    const dispatches: any[] = [];
-    const resources = { heavyPumps: { available: 0, total: 0 }, suctionTankers: { available: 0, total: 0 }, responseTeams: { available: 0, total: 0 } };
-    const updateIncidentStatus = (id: string, status: string) => { };
-    const deleteIncident = (id: string) => { };
+    const { incidents, dispatches, resources, updateIncidentStatus, deleteIncident } = useIncidents();
     const [notification, setNotification] = useState<string | null>(null);
     const [broadcasting, setBroadcasting] = useState(false);
 

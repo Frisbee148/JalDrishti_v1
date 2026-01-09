@@ -16,11 +16,7 @@ const DELHI_BOUNDS = {
 
 export default function ReportsPage() {
     const router = useRouter();
-    // const { addIncident } = useIncidents();
-    // FALLBACK: Context disabled by user request. Using mock function to prevent crash.
-    const addIncident = (data: any) => {
-        console.log("Mock addIncident called (IncidentProvider disabled):", data);
-    };
+    const { addIncident } = useIncidents();
 
     const [step, setStep] = useState<"form" | "uploading" | "success">("form");
 
@@ -98,11 +94,9 @@ export default function ReportsPage() {
     };
 
     return (
-        <div className="flex bg-background min-h-screen">
-            {/* Sidebar is in Global Layout */}
-            <div className="flex-1 p-8 flex flex-col items-center justify-center relative overflow-hidden">
-                {/* Background decoration */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10 animate-pulse"></div>
+        <div className="min-h-screen bg-background border-l border-white/5 p-8 flex flex-col items-center justify-center relative overflow-hidden">
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10 animate-pulse"></div>
 
             <div className="max-w-xl w-full">
                 <h1 className="text-3xl font-bold text-white mb-2">Report Incident</h1>
@@ -247,9 +241,9 @@ export default function ReportsPage() {
                                 </div>
                                 <p className="text-slate-500 mt-4 text-sm">Redirecting...</p>
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                    </div>
                 </div>
             </div>
         </div>

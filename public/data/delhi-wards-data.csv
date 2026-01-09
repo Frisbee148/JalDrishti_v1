@@ -1,0 +1,41 @@
+ward_id,ward_name,basin_name,area_acres,runoff_coeff,elevation_type,existing_capacity_cusecs
+142,Jangpura,Barapullah,
+480,
+0.85,Low-lying,
+320
+144,Lajpat Nagar,Barapullah,
+620,
+0.90,Moderate,
+450
+76,Karol Bagh,Najafgarh,
+540,
+0.95,High-Density,
+380
+121,Minto Road,Najafgarh,
+310,
+0.92,Topographic Sink,
+210
+158,Seelampur,Shahdara,
+710,
+0.88,Low-lying,
+400
+177,Harkesh Nagar,Barapullah,
+450,
+0.82,Moderate,
+310
+86,Model Town,Najafgarh,
+590,
+0.75,Residential,
+420
+210,Dwarka B,Najafgarh,
+1200,
+0.65,Modern-Planned,
+950
+42,Rohini Sector 20,Najafgarh,
+850,
+0.70,Sub-basin,
+600
+13,Civil Lines,Yamuna-Right,
+400,
+0.55,High-Vegetation,
+350

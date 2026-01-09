@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { IncidentProvider } from "../context/IncidentContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -24,12 +25,9 @@ export default function RootLayout({
       <body
         className={`${inter.variable} antialiased bg-black text-white`}
       >
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <main className="flex-1 ml-64 relative min-h-screen">
-            {children}
-          </main>
-        </div>
+        {/* <IncidentProvider> */}
+        {children}
+        {/* </IncidentProvider> */}
       </body>
     </html>
   );

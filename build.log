@@ -1,0 +1,34 @@
+
+> jaldrishti@0.1.0 build
+> next build
+
+▲ Next.js 16.1.1 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 7.0s
+  Running TypeScript ...
+  Collecting page data using 17 workers ...
+  Generating static pages using 17 workers (0/12) ...
+  Generating static pages using 17 workers (3/12) 
+  Generating static pages using 17 workers (6/12) 
+  Generating static pages using 17 workers (9/12) 
+✓ Generating static pages using 17 workers (12/12) in 1055.6ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /admin
+├ ○ /analytics
+├ ƒ /api/analyze-image
+├ ƒ /api/dashboard
+├ ○ /dashboard
+├ ○ /methodology
+├ ○ /reports
+└ ○ /simulation
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
