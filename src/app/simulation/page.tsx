@@ -40,8 +40,7 @@ export default function SimulationPage() {
             const response = await fetch("http://localhost:8000/predict", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
-                    "X-API-Key": "jal-drishti-secure-key-2025" // In prod, use process.env.NEXT_PUBLIC_API_KEY
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                     temperature,

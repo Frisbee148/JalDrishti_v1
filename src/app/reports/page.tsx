@@ -247,7 +247,8 @@ export default function ReportsPage() {
                                 </div>
                                 <p className="text-slate-500 mt-4 text-sm">Redirecting...</p>
                             </div>
-                        )}
+                        </div>
+                    )}
 
                     </div>
                 </div>

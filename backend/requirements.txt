@@ -10,7 +10,3 @@ python-dotenv
 imagehash
 google-search-results
 requests
-sqlalchemy
-sqlmodel
-passlib[bcrypt]
-python-jose[cryptography]

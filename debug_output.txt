@@ -1,2 +1,0 @@
-Status: 500
-Content: {"detail":"Server Error: (sqlite3.OperationalError) no such column: report.image_hash\n[SQL: SELECT report.id, report.timestamp, report.location, report.lat, report.lng, report.image_url, report.ai_analysis_json, report.is_spam, report.admin_status, report.reporter_id, report.image_hash \nFROM report]\n(Background on this error at: https://sqlalche.me/e/20/e3q8)"}

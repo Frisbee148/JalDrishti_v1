@@ -3,37 +3,17 @@
 import { useState, Suspense, useEffect } from "react";
 import { MapboxView } from "@/components/map/MapboxView";
 import { RainfallSlider } from "@/components/dashboard/RainfallSlider";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 function DashboardContent() {
     const [rainfall, setRainfall] = useState(0);
     const [reports, setReports] = useState<any[]>([]);
     const searchParams = useSearchParams();
-    const router = useRouter();
     const hasNewReport = searchParams.get("report") === "success";
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-
-        // Ensure user is logged in
-        if (!token) {
-            router.push("/login");
-            return;
-        }
-
-        fetch("http://localhost:8000/reports", {
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        })
-            .then(res => {
-                if (res.status === 401) {
-                    localStorage.removeItem("token");
-                    router.push("/login");
-                    throw new Error("Unauthorized");
-                }
-                return res.json();
-            })
+        fetch("http://localhost:8000/reports")
+            .then(res => res.json())
             .then(data => {
                 if (!Array.isArray(data)) {
                     console.error("Expected array of reports, got:", data);
@@ -47,7 +27,7 @@ function DashboardContent() {
                 setReports(validReports);
             })
             .catch(err => console.error(err));
-    }, [router]);
+    }, []);
 
     return (
         <div className="relative w-full h-[calc(100vh)] bg-background overflow-hidden">
