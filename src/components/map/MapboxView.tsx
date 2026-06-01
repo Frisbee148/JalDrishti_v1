@@ -8,6 +8,7 @@ interface MapboxViewProps {
     rainfallIntensity: number;
     liveReports?: any[];
     wardScores?: Record<string, number>;
+    selectedHotspot?: [number, number] | null;
 }
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
@@ -33,7 +34,7 @@ const BASIN_FILES = [
 ];
 const MAX_RAINFALL = 120;
 
-export function MapboxView({ rainfallIntensity, liveReports, wardScores }: MapboxViewProps) {
+export function MapboxView({ rainfallIntensity, liveReports, wardScores, selectedHotspot }: MapboxViewProps) {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
     const popup = useRef<mapboxgl.Popup | null>(null);
@@ -121,6 +122,31 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores }: Mapbo
             })
             .catch(err => console.error("Hotspot data load failed", err));
     }, [mapLoaded]);
+
+    // Fly to selected hotspot and open its card
+    useEffect(() => {
+        if (!map.current || !mapLoaded || !selectedHotspot) return;
+        map.current.flyTo({
+            center: selectedHotspot,
+            zoom: 16,
+            pitch: 60,
+            bearing: 20,
+            essential: true
+        });
+
+        // Ensure only the selected hotspot's card is open
+        hotspotMarkers.current.forEach(marker => {
+            const lngLat = marker.getLngLat();
+            const popup = marker.getPopup();
+            if (popup) {
+                if (lngLat.lng === selectedHotspot[0] && lngLat.lat === selectedHotspot[1]) {
+                    if (!popup.isOpen()) marker.togglePopup();
+                } else {
+                    if (popup.isOpen()) marker.togglePopup();
+                }
+            }
+        });
+    }, [selectedHotspot, mapLoaded]);
 
     // Map initialisation
     useEffect(() => {

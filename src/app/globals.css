@@ -199,3 +199,8 @@ body {
     line-height: 1;
     animation: hotspot-glow 2s ease-in-out infinite;
 }
+
+/* Ensure mapbox popups stay on top of other UI elements */
+.mapboxgl-popup {
+    z-index: 50 !important;
+}
