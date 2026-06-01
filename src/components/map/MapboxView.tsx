@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -18,7 +18,14 @@ const createPulsingMarker = (type: string) => {
     return el;
 };
 
+const createHotspotMarker = () => {
+    const el = document.createElement('div');
+    el.className = 'marker-hotspot';
+    return el;
+};
+
 const WARDS_DATA_URL = "/data/delhi-wards.geojson";
+const HOTSPOTS_URL = "/data/hotspots.json";
 const BASIN_FILES = [
     "/data/delhi_drains/najafgarh_basin.json",
     "/data/delhi_drains/barapullah_basin.json",
@@ -31,7 +38,9 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores }: Mapbo
     const map = useRef<mapboxgl.Map | null>(null);
     const popup = useRef<mapboxgl.Popup | null>(null);
     const reportMarkers = useRef<mapboxgl.Marker[]>([]);
+    const hotspotMarkers = useRef<mapboxgl.Marker[]>([]);
     const geojsonCache = useRef<any>(null);
+    const lastScoresRef = useRef<Record<string, number> | undefined>(undefined);
     const [mapLoaded, setMapLoaded] = useState(false);
 
     // Render live report markers
@@ -69,6 +78,49 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores }: Mapbo
             reportMarkers.current.push(marker);
         });
     }, [liveReports, mapLoaded]);
+
+    // Load and render hotspot markers
+    useEffect(() => {
+        if (!map.current || !mapLoaded) return;
+        const m = map.current;
+
+        fetch(HOTSPOTS_URL)
+            .then(res => res.json())
+            .then((data: any) => {
+                // Clean up old markers
+                hotspotMarkers.current.forEach(marker => marker.remove());
+                hotspotMarkers.current = [];
+
+                (data.features || []).forEach((feature: any) => {
+                    const props = feature.properties;
+                    const coords = feature.geometry.coordinates;
+                    const isChronicOrOfficial = props.type === "chronic" || props.type === "official";
+
+                    const el = createHotspotMarker();
+
+                    const severityColor = props.type === "chronic" ? "#ef4444" : "#f97316";
+                    const severityLabel = props.type === "chronic" ? "CHRONIC HOTSPOT" : "KNOWN HOTSPOT";
+
+                    const hotspotPopup = new mapboxgl.Popup({ offset: 25, maxWidth: '300px' }).setHTML(`
+                        <div style="color:black; padding:10px; min-width:240px; font-family:system-ui;">
+                            <span style="background:${severityColor}; color:white; font-size:9px; padding:2px 8px; border-radius:3px; margin-bottom:8px; display:inline-block; font-weight:700; letter-spacing:0.5px;">${severityLabel}</span>
+                            <h4 style="font-weight:bold; font-size:14px; margin:6px 0 4px 0; color:#1e293b;">${props.name}</h4>
+                            <p style="font-size:11px; color:#64748b; margin-bottom:8px; line-height:1.4;">${props.description}</p>
+                            <div style="background:#fef2f2; padding:6px 8px; border-radius:4px; font-size:10px; border:1px solid #fecaca;">
+                                <span style="color:#991b1b; font-weight:600;">Basin:</span> <span style="color:#7f1d1d;">${props.basin}</span>
+                            </div>
+                        </div>
+                    `);
+
+                    const marker = new mapboxgl.Marker({ element: el })
+                        .setLngLat([coords[0], coords[1]])
+                        .setPopup(hotspotPopup)
+                        .addTo(m);
+                    hotspotMarkers.current.push(marker);
+                });
+            })
+            .catch(err => console.error("Hotspot data load failed", err));
+    }, [mapLoaded]);
 
     // Map initialisation
     useEffect(() => {
@@ -110,6 +162,7 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores }: Mapbo
             m.addSource("delhi-wards", { type: "geojson", data: geojsonCache.current || WARDS_DATA_URL });
 
             // Water extrusion — all wards, colour/height driven by RF risk_score + rainfall
+            // Smooth transitions: 800ms duration for height and color to prevent jarring jumps
             m.addLayer({
                 id: "delhi-wards-risk",
                 type: "fill-extrusion",
@@ -119,9 +172,9 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores }: Mapbo
                     "fill-extrusion-height": 0,
                     "fill-extrusion-base": 0,
                     "fill-extrusion-opacity": 0,
-                    "fill-extrusion-height-transition": { duration: 400, delay: 0 },
-                    "fill-extrusion-color-transition": { duration: 400, delay: 0 },
-                    "fill-extrusion-opacity-transition": { duration: 400, delay: 0 },
+                    "fill-extrusion-height-transition": { duration: 800, delay: 0 },
+                    "fill-extrusion-color-transition": { duration: 600, delay: 0 },
+                    "fill-extrusion-opacity-transition": { duration: 500, delay: 0 },
                 },
             });
 
@@ -136,8 +189,8 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores }: Mapbo
                     "fill-extrusion-height": 0,
                     "fill-extrusion-base": 0,
                     "fill-extrusion-opacity": 0,
-                    "fill-extrusion-opacity-transition": { duration: 600, delay: 0 },
-                    "fill-extrusion-height-transition": { duration: 400, delay: 0 },
+                    "fill-extrusion-opacity-transition": { duration: 800, delay: 0 },
+                    "fill-extrusion-height-transition": { duration: 800, delay: 0 },
                 },
             });
 
@@ -177,7 +230,7 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores }: Mapbo
                     <div style="padding:12px; min-width:220px; font-family:system-ui;">
                         <h4 style="font-weight:bold; font-size:16px; margin:0 0 12px 0; color:#1e293b;">${wardName}</h4>
                         <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                            <span style="color:#64748b;">RF Risk Score:</span>
+                            <span style="color:#64748b;">Risk Score:</span>
                             <span style="font-weight:600; color:#6200EA;">${riskScore.toFixed(0)}/100</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
@@ -211,7 +264,30 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores }: Mapbo
         };
     }, []);
 
-    // Update 3D water extrusion when rainfall or RF ward scores change
+    // Update GeoJSON source ONLY when wardScores actually change (not on every rainfall tick)
+    useEffect(() => {
+        if (!map.current || !mapLoaded) return;
+        const m = map.current;
+
+        const hasScores = wardScores && Object.keys(wardScores).length > 0;
+        if (!hasScores || !geojsonCache.current) return;
+
+        // Skip if scores haven't changed (same reference or same values)
+        if (lastScoresRef.current === wardScores) return;
+        lastScoresRef.current = wardScores;
+
+        const enriched = {
+            ...geojsonCache.current,
+            features: geojsonCache.current.features.map((f: any) => ({
+                ...f,
+                properties: { ...f.properties, risk_score: wardScores![f.properties.Ward_Name] ?? 40 },
+            })),
+        };
+        (m.getSource("delhi-wards") as mapboxgl.GeoJSONSource).setData(enriched);
+    }, [wardScores, mapLoaded]);
+
+    // Update 3D water extrusion PAINT properties when rainfall changes
+    // This is decoupled from the GeoJSON data update above for smooth visual transitions
     useEffect(() => {
         if (!map.current || !mapLoaded) return;
         const m = map.current;
@@ -222,20 +298,8 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores }: Mapbo
 
         const hasScores = wardScores && Object.keys(wardScores).length > 0;
 
-        // Enrich source with per-ward risk_score from RF model
-        if (hasScores && geojsonCache.current) {
-            const enriched = {
-                ...geojsonCache.current,
-                features: geojsonCache.current.features.map((f: any) => ({
-                    ...f,
-                    properties: { ...f.properties, risk_score: wardScores![f.properties.Ward_Name] ?? 40 },
-                })),
-            };
-            (m.getSource("delhi-wards") as mapboxgl.GeoJSONSource).setData(enriched);
-        }
-
         // Height — per-ward RF score × rainfall scaling
-        // At risk=100, rain=120 → 240 m extrusion, clearly visible above buildings
+        // Uses Mapbox expression interpolation so transitions happen per-feature smoothly
         const heightExpr: mapboxgl.Expression = hasScores
             ? ["*", ["/", ["coalesce", ["get", "risk_score"], 40], 100], rainfallIntensity * 2] as mapboxgl.Expression
             : ["literal", rainfallIntensity * 1.5] as mapboxgl.Expression;
@@ -264,11 +328,18 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores }: Mapbo
 
         m.setPaintProperty("delhi-wards-risk", "fill-extrusion-color", colorExpr);
 
-        // Opacity — invisible when dry, visible when raining
-        m.setPaintProperty("delhi-wards-risk", "fill-extrusion-opacity", rainfallIntensity > 0 ? 0.55 : 0);
+        // Opacity — smooth fade in/out based on rainfall, not binary 0/0.55
+        const riskOpacity = rainfallIntensity > 0
+            ? Math.min(0.6, 0.15 + (rainfallIntensity / MAX_RAINFALL) * 0.45)
+            : 0;
+        m.setPaintProperty("delhi-wards-risk", "fill-extrusion-opacity", riskOpacity);
 
-        // Danger flash — red pulse on high-risk wards at extreme rainfall (> 85 mm/hr)
-        m.setPaintProperty("delhi-wards-danger", "fill-extrusion-opacity", rainfallIntensity > 85 ? 0.8 : 0);
+        // Danger flash — graduated opacity instead of binary threshold
+        // Starts fading in at 50mm, full at 100mm
+        const dangerOpacity = rainfallIntensity > 50
+            ? Math.min(0.85, (rainfallIntensity - 50) / 70 * 0.85)
+            : 0;
+        m.setPaintProperty("delhi-wards-danger", "fill-extrusion-opacity", dangerOpacity);
 
     }, [rainfallIntensity, wardScores, mapLoaded]);
 

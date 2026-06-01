@@ -26,7 +26,9 @@ function DashboardContent() {
             .catch(err => console.error(err));
     }, []);
 
-    // Call RF /predict whenever slider changes (debounced 500ms)
+    // Call RF /predict whenever slider changes (debounced 150ms)
+    // The map updates paint properties instantly from rainfallIntensity;
+    // this API call only refreshes per-ward risk scores in the background.
     useEffect(() => {
         if (predictTimer.current) clearTimeout(predictTimer.current);
         predictTimer.current = setTimeout(async () => {
@@ -42,7 +44,7 @@ function DashboardContent() {
             } catch {
                 // backend offline — map falls back to uniform height
             }
-        }, 500);
+        }, 150);
         return () => { if (predictTimer.current) clearTimeout(predictTimer.current); };
     }, [rainfall]);
 
