@@ -102,7 +102,7 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores, selecte
                     const severityColor = props.type === "chronic" ? "#ef4444" : "#f97316";
                     const severityLabel = props.type === "chronic" ? "CHRONIC HOTSPOT" : "KNOWN HOTSPOT";
 
-                    const hotspotPopup = new mapboxgl.Popup({ offset: 25, maxWidth: '300px' }).setHTML(`
+                    const hotspotPopup = new mapboxgl.Popup({ offset: 25, maxWidth: '300px', anchor: 'bottom' }).setHTML(`
                         <div style="color:black; padding:10px; min-width:240px; font-family:system-ui;">
                             <span style="background:${severityColor}; color:white; font-size:9px; padding:2px 8px; border-radius:3px; margin-bottom:8px; display:inline-block; font-weight:700; letter-spacing:0.5px;">${severityLabel}</span>
                             <h4 style="font-weight:bold; font-size:14px; margin:6px 0 4px 0; color:#1e293b;">${props.name}</h4>
@@ -134,12 +134,15 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores, selecte
             essential: true
         });
 
-        // Ensure only the selected hotspot's card is open
+        // Ensure only the selected hotspot's card is open using float tolerance
         hotspotMarkers.current.forEach(marker => {
             const lngLat = marker.getLngLat();
             const popup = marker.getPopup();
             if (popup) {
-                if (lngLat.lng === selectedHotspot[0] && lngLat.lat === selectedHotspot[1]) {
+                const isMatch = Math.abs(lngLat.lng - selectedHotspot[0]) < 0.0001 && 
+                                Math.abs(lngLat.lat - selectedHotspot[1]) < 0.0001;
+                
+                if (isMatch) {
                     if (!popup.isOpen()) marker.togglePopup();
                 } else {
                     if (popup.isOpen()) marker.togglePopup();

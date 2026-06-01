@@ -24,9 +24,10 @@ from sklearn.ensemble import RandomForestRegressor
 # Paths (relative to this file, which lives in backend/)
 # ---------------------------------------------------------------------------
 _DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PKL = os.path.join(_DIR, "models", "rf_waterlogging.pkl")
-WARD_CSV = os.path.join(_DIR, "data", "ward_features.csv")
-BASIN_JSON = os.path.join(_DIR, "models", "ward_basin_map.json")
+BACKEND_DIR = os.path.join(os.path.dirname(_DIR), "backend")
+MODEL_PKL = os.path.join(BACKEND_DIR, "models", "rf_waterlogging.pkl")
+WARD_CSV = os.path.join(BACKEND_DIR, "data", "ward_features.csv")
+BASIN_JSON = os.path.join(BACKEND_DIR, "models", "ward_basin_map.json")
 
 EXPECTED_FEATURES = [
     "ISP", "road_density", "population_density", "NDVI",
