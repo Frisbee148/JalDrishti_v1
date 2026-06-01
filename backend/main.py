@@ -5,6 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import io
 from PIL import Image
 import os
+import json
+import joblib
+import pandas as pd
 from dotenv import load_dotenv
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import VisualFeatureTypes
@@ -470,6 +473,75 @@ def react_to_report(report_id: str, reaction: Reaction):
                 report.downvotes += 1
             return {"status": "reaction_added", "upvotes": report.upvotes, "downvotes": report.downvotes}
     raise HTTPException(status_code=404, detail="Report not found")
+
+# --- RF Waterlogging Predictor ---
+
+_RF_PKL = os.path.join(os.path.dirname(__file__), "models", "rf_waterlogging.pkl")
+_WARD_CSV = os.path.join(os.path.dirname(__file__), "data", "ward_features.csv")
+_BASIN_JSON = os.path.join(os.path.dirname(__file__), "models", "ward_basin_map.json")
+
+_RF_FEATURES = [
+    "ISP", "road_density", "population_density", "NDVI",
+    "runoff_coeff", "capacity_cusecs", "area_acres", "elevation_factor"
+]
+
+try:
+    _rf_bundle = joblib.load(_RF_PKL)
+    _rf_model = _rf_bundle["model"]
+    _ward_df = pd.read_csv(_WARD_CSV)
+    _ward_df[_RF_FEATURES] = _ward_df[_RF_FEATURES].fillna(_ward_df[_RF_FEATURES].median())
+    with open(_BASIN_JSON) as _f:
+        _ward_basin_map = json.load(_f)
+    _rf_ready = True
+except Exception as _e:
+    print(f"[WARN] RF model not loaded: {_e}")
+    _rf_ready = False
+
+
+class RFPredictionInput(BaseModel):
+    temperature: float = 30
+    humidity: float = 70
+    pressure: float = 1010
+    cloud_cover: float = 60
+    rainfall_mm: float = 0
+    basin_rainfall: dict = {}
+
+
+@app.post("/predict")
+def predict_waterlogging(data: RFPredictionInput):
+    if not _rf_ready:
+        raise HTTPException(status_code=503, detail="RF model not available. Run backend/train_rf.py first.")
+
+    ward_risks = {}
+    ward_scores = {}
+
+    ward_features = _ward_df[_RF_FEATURES].values
+    base_risks = _rf_model.predict(ward_features)
+
+    for i, row in _ward_df.iterrows():
+        ward = str(row["ward_name"])
+        basin = _ward_basin_map.get(ward, "Najafgarh")
+        rain = data.basin_rainfall.get(basin, data.rainfall_mm)
+
+        # Non-linear rainfall scaling: 50mm ≈ baseline, 150mm ≈ 2.4x
+        rain_factor = (rain / 50.0) ** 0.65 if rain > 0 else 0.0
+        risk = min(100.0, float(base_risks[i]) * rain_factor)
+
+        score = round(risk)
+        status = "High" if risk > 65 else "Medium" if risk > 35 else "Low"
+        ward_risks[ward] = status
+        ward_scores[ward] = score
+
+    global_rain = data.rainfall_mm or (max(data.basin_rainfall.values()) if data.basin_rainfall else 0)
+
+    return {
+        "rainfall_mm": global_rain,
+        "basin_rainfall": data.basin_rainfall,
+        "ward_risks": ward_risks,
+        "ward_scores": ward_scores,
+        "source": "rf_model",
+    }
+
 
 if __name__ == "__main__":
     import uvicorn

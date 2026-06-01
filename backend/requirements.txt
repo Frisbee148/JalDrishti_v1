@@ -10,3 +10,6 @@ python-dotenv
 imagehash
 google-search-results
 requests
+scikit-learn
+joblib
+pandas

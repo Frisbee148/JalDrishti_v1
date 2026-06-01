@@ -20,6 +20,15 @@ export default function SimulationPage() {
     // --- Rainfall Output ---
     const [predictedRainfall, setPredictedRainfall] = useState(0); // mm
 
+    // --- Basin-Level Rainfall (region-wise) ---
+    const [basinRainfall, setBasinRainfall] = useState<Record<string, number>>({
+        "Najafgarh": 0,
+        "Barapullah": 0,
+        "Shahdara-Yamuna": 0,
+    });
+    const setBasin = (basin: string, val: number) =>
+        setBasinRainfall(prev => ({ ...prev, [basin]: val }));
+
     // --- Urban State (Regression Variables) ---
     const [isp, setISP] = useState(50); // Impervious Surface %
     const [roadDens, setRoadDens] = useState(10); // km/km2
@@ -47,18 +56,16 @@ export default function SimulationPage() {
                     humidity,
                     pressure,
                     cloud_cover: cloudCover,
-                    // Pass Urban Factors to influence the model
-                    isp,
-                    road_density: roadDens,
-                    ndvi,
-                    population_density: popDens
+                    rainfall_mm: Math.max(...Object.values(basinRainfall)),
+                    basin_rainfall: basinRainfall,
                 })
             });
 
             if (!response.ok) throw new Error("Backend connection failed");
 
             const data = await response.json();
-            setPredictedRainfall(Math.round(data.rainfall_mm));
+            const maxBasin = Math.max(...Object.values(basinRainfall));
+            setPredictedRainfall(Math.round(maxBasin > 0 ? maxBasin : data.rainfall_mm));
             setLocations(data.locations || []);
             setWardRisks(data.ward_risks || {});
             setWardScores(data.ward_scores || {});
@@ -99,13 +106,14 @@ export default function SimulationPage() {
     const riskScore = calculateRisk();
     const isCityAverage = locations.length > 0;
 
-    // Trigger prediction when weather changes
+    // Trigger prediction when basin rainfall or weather changes
     useEffect(() => {
         const timer = setTimeout(() => {
-            // predictRainfall(); // Disabled as per user request
-        }, 500); // Debounce
+            predictRainfall();
+        }, 400);
         return () => clearTimeout(timer);
-    }, [temperature, humidity, pressure, cloudCover, modelTrained]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [basinRainfall, temperature, humidity, pressure, cloudCover]);
 
 
     // --- Training Handler ---
@@ -221,7 +229,32 @@ export default function SimulationPage() {
                             </div>
                         </div>
 
-                        <div className="mt-8 pt-6 border-t border-white/10">
+                        {/* Basin-Level Rainfall Sliders */}
+                        <div className="mt-6 pt-6 border-t border-white/10 space-y-4">
+                            <h4 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                                <Droplets size={14} className="text-blue-400" /> Rainfall by Drainage Basin
+                            </h4>
+                            {([
+                                { key: "Najafgarh", color: "accent-violet-500", textColor: "text-violet-400", label: "Najafgarh" },
+                                { key: "Barapullah", color: "accent-cyan-500", textColor: "text-cyan-400", label: "Barapullah" },
+                                { key: "Shahdara-Yamuna", color: "accent-amber-500", textColor: "text-amber-400", label: "Shahdara-Yamuna" },
+                            ] as const).map(({ key, color, textColor, label }) => (
+                                <div key={key}>
+                                    <div className="flex justify-between mb-1">
+                                        <label className="text-slate-400 text-xs">{label} Basin</label>
+                                        <span className={`${textColor} font-mono text-xs`}>{basinRainfall[key]} mm/hr</span>
+                                    </div>
+                                    <input
+                                        type="range" min="0" max="150" step="1"
+                                        value={basinRainfall[key]}
+                                        onChange={(e) => setBasin(key, parseInt(e.target.value))}
+                                        className={`w-full ${color} h-2 bg-black/50 rounded-lg cursor-pointer`}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="mt-6 pt-6 border-t border-white/10">
                             {/* Simplified View: Auto-prediction is always active via useEffect */}
                             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-center">
                                 <div className="text-blue-200 text-sm mb-1 uppercase tracking-wider">Predicted Rainfall</div>
@@ -377,7 +410,7 @@ export default function SimulationPage() {
                             </div>
                         </div>
 
-                        <Button className="w-full" variant="outline" onClick={() => { setTemperature(30); setHumidity(75); setISP(50); setPredictedRainfall(0); setModelTrained(false); }}>
+                        <Button className="w-full" variant="outline" onClick={() => { setTemperature(30); setHumidity(75); setISP(50); setPredictedRainfall(0); setModelTrained(false); setBasinRainfall({ "Najafgarh": 0, "Barapullah": 0, "Shahdara-Yamuna": 0 }); }}>
                             <RefreshCw size={16} className="mr-2" /> Reset Simulation
                         </Button>
                     </div>
