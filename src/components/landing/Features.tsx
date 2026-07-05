@@ -1,40 +1,59 @@
-import { Layers, CloudLightning, Users } from "lucide-react";
-
 const features = [
     {
+        index: "01",
         title: "PSI Index",
-        description: "The Predictive Saturation Index (PSI) calculates soil absorption limits against forecasted rainfall intensity.",
-        icon: CloudLightning,
+        description:
+            "The Predictive Saturation Index calculates soil absorption limits against forecasted rainfall intensity.",
     },
     {
+        index: "02",
         title: "3D Digital Twin",
-        description: "High-fidelity extrusion models of Delhi's wards visualizing elevation-based flood risks in real-time.",
-        icon: Layers,
+        description:
+            "High-fidelity extrusion models of Delhi's wards visualizing elevation-based flood risks in real time.",
     },
     {
+        index: "03",
         title: "Citizen Reporting",
-        description: "AI-verified incident reporting system allowing citizens to validate model predictions with on-ground data.",
-        icon: Users,
+        description:
+            "AI-verified incident reporting lets citizens validate model predictions with on-ground data.",
     },
 ];
 
 export function Features() {
     return (
-        <section className="py-24">
+        <section className="py-28">
             <div className="container mx-auto px-4">
-                <div className="grid gap-8 md:grid-cols-3">
+                <div className="mx-auto max-w-2xl text-center mb-16">
+                    <p className="text-xs font-medium tracking-widest uppercase text-primary mb-4">
+                        How it works
+                    </p>
+                    <h2 className="text-3xl lg:text-4xl font-semibold tracking-tight text-text-strong">
+                        Built on three pillars
+                    </h2>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-3">
                     {features.map((feature) => (
                         <div
                             key={feature.title}
-                            className="group relative overflow-hidden rounded-2xl border border-white/5 bg-surface p-8 transition-all hover:-translate-y-1 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/5"
+                            className="group relative overflow-hidden rounded-2xl border border-border bg-surface p-8 transition-all duration-300 hover:-translate-y-1 hover:border-border-hover hover:bg-surface-hover hover:shadow-2xl hover:shadow-black/30"
                         >
-                            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-background text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                                <feature.icon className="w-6 h-6" />
+                            {/* Editorial index marker instead of icon */}
+                            <div className="mb-8 flex items-baseline gap-3">
+                                <span className="text-sm font-mono text-primary tracking-wider">
+                                    {feature.index}
+                                </span>
+                                <span className="h-px flex-1 bg-border group-hover:bg-border-hover transition-colors duration-300" />
                             </div>
-                            <h3 className="mb-3 text-xl font-bold text-white">{feature.title}</h3>
-                            <p className="text-slate-400 leading-relaxed">{feature.description}</p>
 
-                            <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-primary to-water opacity-0 group-hover:opacity-10 blur-2xl transition-opacity" />
+                            <h3 className="mb-3 text-xl font-semibold tracking-tight text-text-strong">
+                                {feature.title}
+                            </h3>
+                            <p className="text-text-muted leading-relaxed">
+                                {feature.description}
+                            </p>
+
+                            <div className="absolute top-0 right-0 -mt-10 -mr-10 h-32 w-32 glow-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         </div>
                     ))}
                 </div>

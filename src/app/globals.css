@@ -2,24 +2,74 @@
 @import "mapbox-gl/dist/mapbox-gl.css";
 
 @theme {
-  --color-background: #1a1033;
-  --color-surface: #2d1b4d;
-  --color-primary: #8b5cf6;
-  --color-border: #4c1d95;
-  --color-water: #22d3ee;
+  /* Foundation */
+  --color-background: #0F1115;
+  --color-background-2: #171A20;
+  --color-surface: #1E232B;
+  --color-surface-hover: #252B35;
+
+  /* Accent system */
+  --color-primary: #3EBCB3;
+  --color-primary-hover: #52C9C1;
+  --color-primary-active: #31A89F;
+  --color-mauve: #C592A8;
+  --color-gold: #F4CC9C;
+
+  /* Water alias — kept for existing markup, now maps to the teal accent */
+  --color-water: #3EBCB3;
+
+  /* Typography */
+  --color-text-strong: #F5F5F5;
+  --color-text-soft: #B8BEC8;
+  --color-text-muted: #8A919C;
+
+  /* Borders */
+  --color-border: #2F3640;
+  --color-border-hover: #454D59;
+
+  /* Status */
+  --color-success: #48C78E;
+  --color-warning: #F4CC9C;
+  --color-error: #E86D75;
+  --color-info: #3EBCB3;
 
   --font-inter: var(--font-inter);
 }
 
 :root {
-  --background: #1a1033;
-  --foreground: #e2e8f0;
+  --background: #0F1115;
+  --foreground: #F5F5F5;
+  --focus-ring: rgba(62, 188, 179, 0.45);
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(62, 188, 179, 0.30);
+  color: #F5F5F5;
+}
+
+/* Hero gradient text — used for editorial display headings */
+.text-gradient-hero {
+  background-image: linear-gradient(135deg, #3EBCB3 0%, #C592A8 55%, #F4CC9C 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Decorative glows — restrained, radial, never neon */
+.glow-primary {
+  background: radial-gradient(circle, rgba(62, 188, 179, 0.20), transparent 70%);
+}
+
+.glow-premium {
+  background: radial-gradient(circle, rgba(244, 204, 156, 0.18), transparent 70%);
 }
 
 /* Custom scrollbar */
@@ -29,16 +79,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #1a1033;
+  background: #0F1115;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2d1b4d;
+  background: #2F3640;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4c1d95;
+  background: #454D59;
 }
 
 /* Marker Pulse Animation */

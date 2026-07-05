@@ -9,6 +9,7 @@ interface MapboxViewProps {
     liveReports?: any[];
     wardScores?: Record<string, number>;
     selectedHotspot?: [number, number] | null;
+    flyToLocation?: [number, number] | null;
 }
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
@@ -34,7 +35,7 @@ const BASIN_FILES = [
 ];
 const MAX_RAINFALL = 120;
 
-export function MapboxView({ rainfallIntensity, liveReports, wardScores, selectedHotspot }: MapboxViewProps) {
+export function MapboxView({ rainfallIntensity, liveReports, wardScores, selectedHotspot, flyToLocation }: MapboxViewProps) {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
     const popup = useRef<mapboxgl.Popup | null>(null);
@@ -42,7 +43,20 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores, selecte
     const hotspotMarkers = useRef<mapboxgl.Marker[]>([]);
     const geojsonCache = useRef<any>(null);
     const lastScoresRef = useRef<Record<string, number> | undefined>(undefined);
+    const openCardRef = useRef<mapboxgl.Popup | null>(null);
     const [mapLoaded, setMapLoaded] = useState(false);
+
+    // Global single-card rule: whenever any popup opens, close whichever one was open before.
+    // Works regardless of how the popup was opened (marker click, flyTo, ward click).
+    const registerPopup = useCallback((p: mapboxgl.Popup) => {
+        p.on('open', () => {
+            if (openCardRef.current && openCardRef.current !== p) {
+                openCardRef.current.remove();
+            }
+            openCardRef.current = p;
+        });
+        return p;
+    }, []);
 
     // Render live report markers
     useEffect(() => {
@@ -58,15 +72,15 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores, selecte
             const badgeColor = isFullyVerified ? "#10b981" : "#0ea5e9";
             const badgeText = isFullyVerified ? "Verified by AI & Admin" : "Verified using AI only";
 
-            const markerPopup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
+            const markerPopup = registerPopup(new mapboxgl.Popup({ offset: 25 })).setHTML(`
                 <div style="color:black; padding:8px; min-width:200px;">
                     <span style="background:${badgeColor}; color:white; font-size:10px; padding:3px 6px; border-radius:4px; margin-bottom:6px; display:inline-block; font-weight:600;">${badgeText}</span>
                     <h4 style="font-weight:bold; margin-bottom:4px;">Waterlogging Reported</h4>
                     <p style="font-size:12px; margin-bottom:8px;">${report.location}</p>
                     <div style="background:#f1f5f9; padding:6px; border-radius:4px; font-size:11px;">
-                        <p><strong>Severity:</strong> ${report.ai_analysis.severity}</p>
-                        <p><strong>Depth:</strong> ${report.ai_analysis.estimated_depth}</p>
-                        <p><strong>Confidence:</strong> ${report.ai_analysis.confidence}%</p>
+                        <p><strong>Severity:</strong> ${report.ai_analysis?.severity || 'Unknown'}</p>
+                        <p><strong>Depth:</strong> ${report.ai_analysis?.estimated_depth || 'Unknown'}</p>
+                        <p><strong>Confidence:</strong> ${report.ai_analysis?.confidence || 0}%</p>
                     </div>
                     <p style="font-size:10px; color:#64748b; margin-top:8px;">Report ID: ${report.id.slice(0, 6)}</p>
                 </div>
@@ -78,18 +92,25 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores, selecte
                 .addTo(m);
             reportMarkers.current.push(marker);
         });
-    }, [liveReports, mapLoaded]);
+    }, [liveReports, mapLoaded, registerPopup]);
 
     // Load and render hotspot markers
     useEffect(() => {
         if (!map.current || !mapLoaded) return;
         const m = map.current;
+        let cancelled = false;
 
         fetch(HOTSPOTS_URL)
             .then(res => res.json())
             .then((data: any) => {
-                // Clean up old markers
-                hotspotMarkers.current.forEach(marker => marker.remove());
+                // Stale fetch (effect re-ran / unmounted) — don't add a duplicate marker set
+                if (cancelled) return;
+
+                // Clean up old markers (and their popups)
+                hotspotMarkers.current.forEach(marker => {
+                    marker.getPopup()?.remove();
+                    marker.remove();
+                });
                 hotspotMarkers.current = [];
 
                 (data.features || []).forEach((feature: any) => {
@@ -102,7 +123,7 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores, selecte
                     const severityColor = props.type === "chronic" ? "#ef4444" : "#f97316";
                     const severityLabel = props.type === "chronic" ? "CHRONIC HOTSPOT" : "KNOWN HOTSPOT";
 
-                    const hotspotPopup = new mapboxgl.Popup({ offset: 25, maxWidth: '300px', anchor: 'bottom' }).setHTML(`
+                    const hotspotPopup = registerPopup(new mapboxgl.Popup({ offset: 25, maxWidth: '300px', anchor: 'bottom' })).setHTML(`
                         <div style="color:black; padding:10px; min-width:240px; font-family:system-ui;">
                             <span style="background:${severityColor}; color:white; font-size:9px; padding:2px 8px; border-radius:3px; margin-bottom:8px; display:inline-block; font-weight:700; letter-spacing:0.5px;">${severityLabel}</span>
                             <h4 style="font-weight:bold; font-size:14px; margin:6px 0 4px 0; color:#1e293b;">${props.name}</h4>
@@ -117,11 +138,29 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores, selecte
                         .setLngLat([coords[0], coords[1]])
                         .setPopup(hotspotPopup)
                         .addTo(m);
+
+                    // Only one card open at a time — close ward popup + other hotspot cards
+                    el.addEventListener('click', () => {
+                        popup.current?.remove();
+                        hotspotMarkers.current.forEach(other => {
+                            if (other !== marker && other.getPopup()?.isOpen()) other.togglePopup();
+                        });
+                    });
+
                     hotspotMarkers.current.push(marker);
                 });
             })
             .catch(err => console.error("Hotspot data load failed", err));
-    }, [mapLoaded]);
+
+        return () => {
+            cancelled = true;
+            hotspotMarkers.current.forEach(marker => {
+                marker.getPopup()?.remove();
+                marker.remove();
+            });
+            hotspotMarkers.current = [];
+        };
+    }, [mapLoaded, registerPopup]);
 
     // Fly to selected hotspot and open its card
     useEffect(() => {
@@ -133,6 +172,9 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores, selecte
             bearing: 20,
             essential: true
         });
+
+        // Close ward popup so cards never overlap
+        popup.current?.remove();
 
         // Ensure only the selected hotspot's card is open using float tolerance
         hotspotMarkers.current.forEach(marker => {
@@ -151,6 +193,47 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores, selecte
         });
     }, [selectedHotspot, mapLoaded]);
 
+    // Fly to a specific location (from admin "View on Map")
+    useEffect(() => {
+        if (!map.current || !mapLoaded || !flyToLocation) return;
+
+        // Close any existing popups
+        popup.current?.remove();
+        hotspotMarkers.current.forEach(marker => {
+            if (marker.getPopup()?.isOpen()) marker.togglePopup();
+        });
+
+        map.current.flyTo({
+            center: flyToLocation,
+            zoom: 17,
+            pitch: 60,
+            bearing: 0,
+            essential: true
+        });
+
+        // After flying, open the nearest report marker popup
+        setTimeout(() => {
+            let closestMarker: mapboxgl.Marker | null = null;
+            let closestDist = Infinity;
+
+            reportMarkers.current.forEach(marker => {
+                const lngLat = marker.getLngLat();
+                const dist = Math.abs(lngLat.lng - flyToLocation[0]) + Math.abs(lngLat.lat - flyToLocation[1]);
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    closestMarker = marker;
+                }
+            });
+
+            if (closestMarker && closestDist < 0.01) {
+                const mkr = closestMarker as mapboxgl.Marker;
+                if (mkr.getPopup() && !mkr.getPopup()!.isOpen()) {
+                    mkr.togglePopup();
+                }
+            }
+        }, 1500);
+    }, [flyToLocation, mapLoaded]);
+
     // Map initialisation
     useEffect(() => {
         if (map.current || !mapContainer.current) return;
@@ -168,7 +251,7 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores, selecte
             antialias: true,
         });
 
-        popup.current = new mapboxgl.Popup({ closeButton: true, closeOnClick: false, className: 'ward-popup' });
+        popup.current = registerPopup(new mapboxgl.Popup({ closeButton: true, closeOnClick: false, className: 'ward-popup' }));
 
         map.current.on("load", async () => {
             if (!map.current) return;
@@ -183,9 +266,9 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores, selecte
                 console.error("Ward GeoJSON load failed", e);
             }
 
-            // 3D terrain
-            m.addSource("mapbox-dem", { type: "raster-dem", url: "mapbox://mapbox.mapbox-terrain-dem-v1", tileSize: 512, maxzoom: 14 });
-            m.setTerrain({ source: "mapbox-dem", exaggeration: 1.5 });
+            // Note: terrain DEM removed — Delhi is near-flat, so exaggerated DEM only
+            // produced tile seams and sheared geometry at high pitch. 3D depth comes
+            // from the Standard style buildings + ward extrusions instead.
 
             // Ward source
             m.addSource("delhi-wards", { type: "geojson", data: geojsonCache.current || WARDS_DATA_URL });
@@ -255,6 +338,11 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores, selecte
 
                 const liveRisk = Math.min(100, (riskScore / 100) * (rain / MAX_RAINFALL) * 100).toFixed(0);
 
+                // Close any open hotspot cards so popups never overlap
+                hotspotMarkers.current.forEach(mk => {
+                    if (mk.getPopup()?.isOpen()) mk.togglePopup();
+                });
+
                 popup.current?.setLngLat(e.lngLat).setHTML(`
                     <div style="padding:12px; min-width:220px; font-family:system-ui;">
                         <h4 style="font-weight:bold; font-size:16px; margin:0 0 12px 0; color:#1e293b;">${wardName}</h4>
@@ -291,7 +379,7 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores, selecte
             map.current?.remove();
             map.current = null;
         };
-    }, []);
+    }, [registerPopup]);
 
     // Update GeoJSON source ONLY when wardScores actually change (not on every rainfall tick)
     useEffect(() => {
@@ -370,9 +458,68 @@ export function MapboxView({ rainfallIntensity, liveReports, wardScores, selecte
             : 0;
         m.setPaintProperty("delhi-wards-danger", "fill-extrusion-opacity", dangerOpacity);
 
+        // Virtual rain particles — density/intensity scale with the slider
+        // setRain is part of GL JS v3.9+ style spec; null clears the effect
+        const t = rainfallIntensity / MAX_RAINFALL;
+        if (rainfallIntensity > 0) {
+            (m as any).setRain({
+                density: Math.min(1, 0.1 + t * 0.9),
+                intensity: Math.min(1, 0.3 + t * 0.7),
+                color: "#a8adbc",
+                opacity: Math.min(0.7, 0.15 + t * 0.55),
+                vignette: Math.min(0.6, t * 0.6),
+                "vignette-color": "#464646",
+                direction: [0, 80],
+                "droplet-size": [2.6, 18.2],
+                "distortion-strength": Math.min(0.7, t * 0.7),
+                "center-thinning": 0,
+            });
+        } else {
+            (m as any).setRain(null);
+        }
+
     }, [rainfallIntensity, wardScores, mapLoaded]);
 
+    // On-screen navigation helpers — for users without a mouse / scroll wheel
+    const PAN_PX = 150;
+    const panBy = (x: number, y: number) => map.current?.panBy([x, y], { duration: 300 });
+    const zoomIn = () => map.current?.zoomIn({ duration: 300 });
+    const zoomOut = () => map.current?.zoomOut({ duration: 300 });
+    const resetView = () => map.current?.easeTo({
+        center: [77.2090, 28.6139],
+        zoom: 14.5,
+        pitch: 65,
+        bearing: -15,
+        duration: 800,
+    });
+
+    const navBtn = "flex h-9 w-9 items-center justify-center rounded-lg bg-surface/90 border border-border text-text-soft backdrop-blur-md transition-colors duration-200 hover:bg-surface-hover hover:border-border-hover hover:text-text-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(62,188,179,0.45)] active:bg-surface-hover select-none";
+
     return (
-        <div ref={mapContainer} className="absolute inset-0 w-full h-full bg-background" />
+        <div className="absolute inset-0 w-full h-full">
+            <div ref={mapContainer} className="absolute inset-0 w-full h-full bg-background" />
+
+            {/* Navigation panel — pan, zoom, reset without mouse/scroll wheel */}
+            <div className="absolute right-4 bottom-6 z-20 flex flex-col items-center gap-3">
+                {/* D-pad pan cluster */}
+                <div className="grid grid-cols-3 gap-1 p-1.5 rounded-xl bg-background/60 border border-border backdrop-blur-md shadow-lg shadow-black/30">
+                    <span />
+                    <button type="button" aria-label="Pan north" title="Pan north" className={navBtn} onClick={() => panBy(0, -PAN_PX)}>▲</button>
+                    <span />
+                    <button type="button" aria-label="Pan west" title="Pan west" className={navBtn} onClick={() => panBy(-PAN_PX, 0)}>◀</button>
+                    <button type="button" aria-label="Reset view" title="Reset view" className={navBtn} onClick={resetView}>⌂</button>
+                    <button type="button" aria-label="Pan east" title="Pan east" className={navBtn} onClick={() => panBy(PAN_PX, 0)}>▶</button>
+                    <span />
+                    <button type="button" aria-label="Pan south" title="Pan south" className={navBtn} onClick={() => panBy(0, PAN_PX)}>▼</button>
+                    <span />
+                </div>
+
+                {/* Zoom cluster */}
+                <div className="flex flex-col gap-1 p-1.5 rounded-xl bg-background/60 border border-border backdrop-blur-md shadow-lg shadow-black/30">
+                    <button type="button" aria-label="Zoom in" title="Zoom in" className={`${navBtn} text-lg font-semibold`} onClick={zoomIn}>+</button>
+                    <button type="button" aria-label="Zoom out" title="Zoom out" className={`${navBtn} text-lg font-semibold`} onClick={zoomOut}>−</button>
+                </div>
+            </div>
+        </div>
     );
 }

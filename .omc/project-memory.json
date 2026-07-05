@@ -1,0 +1,326 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1783227458657,
+  "projectRoot": "/home/casp1an/Code/JalDrishti",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "next",
+        "version": "16.1.1",
+        "category": "fullstack"
+      },
+      {
+        "name": "react",
+        "version": "19.2.3",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "19.2.3",
+        "category": "frontend"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": null,
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "next dev",
+      "build": "next build",
+      "start": "next start",
+      "lint": "eslint"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": "type-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "public",
+      "src",
+      "static",
+      "tests"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "backend": {
+      "path": "backend",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1783227458644,
+      "keyFiles": [
+        "conftest.py",
+        "main.py",
+        "prepare_ward_data.py",
+        "pytest.ini",
+        "requirements.txt"
+      ]
+    },
+    "eror_reporting_images": {
+      "path": "eror_reporting_images",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1783227458645,
+      "keyFiles": []
+    },
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 5,
+      "lastAccessed": 1783227458650,
+      "keyFiles": [
+        "file.svg",
+        "globe.svg",
+        "next.svg",
+        "vercel.svg",
+        "window.svg"
+      ]
+    },
+    "reference copy": {
+      "path": "reference copy",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1783227458653,
+      "keyFiles": [
+        "REFERENCE_GUIDE.md"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1783227458653,
+      "keyFiles": []
+    },
+    "static": {
+      "path": "static",
+      "purpose": "Static files",
+      "fileCount": 0,
+      "lastAccessed": 1783227458654,
+      "keyFiles": []
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 2,
+      "lastAccessed": 1783227458654,
+      "keyFiles": [
+        "test_hotspots.py",
+        "test_model.py"
+      ]
+    },
+    "backend/data": {
+      "path": "backend/data",
+      "purpose": "Data files",
+      "fileCount": 1,
+      "lastAccessed": 1783227458654,
+      "keyFiles": [
+        "ward_features.csv"
+      ]
+    },
+    "backend/models": {
+      "path": "backend/models",
+      "purpose": "Data models",
+      "fileCount": 2,
+      "lastAccessed": 1783227458654,
+      "keyFiles": [
+        "rf_waterlogging.pkl",
+        "ward_basin_map.json"
+      ]
+    },
+    "backend/static": {
+      "path": "backend/static",
+      "purpose": "Static files",
+      "fileCount": 0,
+      "lastAccessed": 1783227458655,
+      "keyFiles": []
+    },
+    "public/data": {
+      "path": "public/data",
+      "purpose": "Data files",
+      "fileCount": 3,
+      "lastAccessed": 1783227458655,
+      "keyFiles": [
+        "delhi-wards-data.csv",
+        "delhi-wards.geojson",
+        "hotspots.json"
+      ]
+    },
+    "src/app": {
+      "path": "src/app",
+      "purpose": "Application code",
+      "fileCount": 3,
+      "lastAccessed": 1783227458655,
+      "keyFiles": [
+        "favicon.ico",
+        "globals.css",
+        "layout.tsx"
+      ]
+    },
+    "src/components": {
+      "path": "src/components",
+      "purpose": "UI components",
+      "fileCount": 0,
+      "lastAccessed": 1783227458655,
+      "keyFiles": []
+    },
+    "src/lib": {
+      "path": "src/lib",
+      "purpose": "Library code",
+      "fileCount": 1,
+      "lastAccessed": 1783227458656,
+      "keyFiles": [
+        "db.ts"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src/components/map/MapboxView.tsx",
+      "accessCount": 17,
+      "lastAccessed": 1781173532516,
+      "type": "file"
+    },
+    {
+      "path": "backend/main.py",
+      "accessCount": 11,
+      "lastAccessed": 1783229171375,
+      "type": "file"
+    },
+    {
+      "path": "src/app/admin/page.tsx",
+      "accessCount": 9,
+      "lastAccessed": 1783229178184,
+      "type": "file"
+    },
+    {
+      "path": "src/app/dashboard/page.tsx",
+      "accessCount": 9,
+      "lastAccessed": 1783231623371,
+      "type": "file"
+    },
+    {
+      "path": "src/components/dashboard/Sidebar.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1783231646667,
+      "type": "file"
+    },
+    {
+      "path": "src/components/ui/Button.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1781171554470,
+      "type": "file"
+    },
+    {
+      "path": "backend/requirements.txt",
+      "accessCount": 3,
+      "lastAccessed": 1783229176678,
+      "type": "file"
+    },
+    {
+      "path": "src/components/landing/Hero.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1781171610955,
+      "type": "file"
+    },
+    {
+      "path": "src/components/landing/Features.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1781171618488,
+      "type": "file"
+    },
+    {
+      "path": "src/components/landing/Stats.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1781171622416,
+      "type": "file"
+    },
+    {
+      "path": "src/app/(marketing)/layout.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1781171628817,
+      "type": "file"
+    },
+    {
+      "path": "tsconfig.json",
+      "accessCount": 2,
+      "lastAccessed": 1783229564211,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 2,
+      "lastAccessed": 1783229694555,
+      "type": "file"
+    },
+    {
+      "path": "src/app/dashboard/layout.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1783231575133,
+      "type": "file"
+    },
+    {
+      "path": "src/components/dashboard/RainfallSlider.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1781170374658,
+      "type": "file"
+    },
+    {
+      "path": "src/app/globals.css",
+      "accessCount": 1,
+      "lastAccessed": 1781171508767,
+      "type": "file"
+    },
+    {
+      "path": ".env",
+      "accessCount": 1,
+      "lastAccessed": 1783228374362,
+      "type": "file"
+    },
+    {
+      "path": "backend/hf_diag.py",
+      "accessCount": 1,
+      "lastAccessed": 1783228885389,
+      "type": "file"
+    },
+    {
+      "path": "src/context/WardRiskContext.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1783231562783,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

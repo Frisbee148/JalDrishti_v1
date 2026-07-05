@@ -38,13 +38,13 @@ export default function CommunityPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background border-l border-white/5 p-8 overflow-y-auto">
+        <div className="min-h-screen bg-background border-l border-border p-8 overflow-y-auto">
             <h1 className="text-3xl font-bold text-white mb-2">Community Feed</h1>
-            <p className="text-slate-400 mb-8">Crowdsourced validation of waterlogging reports.</p>
+            <p className="text-text-muted mb-8">Crowdsourced validation of waterlogging reports.</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {reports.map((report) => (
-                    <div key={report.id} className="bg-surface border border-white/10 rounded-xl overflow-hidden hover:border-primary/50 transition-colors">
+                    <div key={report.id} className="bg-surface border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-colors">
                         <div className="h-48 bg-black/50 relative flex items-center justify-center overflow-hidden">
                             {report.image_url && !report.image_url.includes("blob") ? (
                                 <img src={report.image_url} alt="Incident Report" className="w-full h-full object-cover" />
@@ -56,11 +56,11 @@ export default function CommunityPage() {
                         <div className="p-5">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <div className="flex items-center text-slate-300 text-sm mb-1">
+                                    <div className="flex items-center text-text-soft text-sm mb-1">
                                         <MapPin className="h-3 w-3 mr-1 text-primary" />
                                         {report.location}
                                     </div>
-                                    <div className="flex items-center text-slate-500 text-xs">
+                                    <div className="flex items-center text-text-muted text-xs">
                                         <User className="h-3 w-3 mr-1" />
                                         Reporter: {report.reporter_id}
                                     </div>
@@ -73,8 +73,8 @@ export default function CommunityPage() {
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/5">
-                                <span className="text-xs text-slate-500">Is this report accurate?</span>
+                            <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+                                <span className="text-xs text-text-muted">Is this report accurate?</span>
                                 <div className="flex gap-2">
                                     <Button size="sm" variant="ghost" className="h-8 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10" onClick={() => sendReaction(report.id, "agree")}>
                                         <ThumbsUp className="h-3 w-3 mr-1.5" /> {report.upvotes}

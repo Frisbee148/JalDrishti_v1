@@ -7,7 +7,7 @@ export default function MethodologyPage() {
         <div className="min-h-screen bg-background p-8 space-y-12">
             <header className="max-w-4xl">
                 <h1 className="text-3xl font-bold text-foreground mb-4">Scientific Methodology</h1>
-                <p className="text-slate-400 text-lg leading-relaxed">
+                <p className="text-text-muted text-lg leading-relaxed">
                     Our waterlogging prediction framework implements the <strong>Spatial Regression Model</strong> approach
                     detailed in <em>"Predicting Urban Waterlogging Risks by Regression Models and Internet Open-Data Sources"</em>.
                     By integrating multi-source open data with advanced GIS analysis, we calculate risk probabilities with high confidence.
@@ -19,14 +19,14 @@ export default function MethodologyPage() {
                 <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                     <GitBranch className="text-primary" /> Integrated Framework
                 </h2>
-                <div className="bg-surface border border-white/10 rounded-2xl p-8 relative overflow-hidden">
+                <div className="bg-surface border border-border rounded-2xl p-8 relative overflow-hidden">
                     {/* Simplified visual representation of Figure 4 from the paper */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center relative z-10">
                         <div className="space-y-4">
                             <div className="bg-black/40 border border-white/20 p-4 rounded-xl text-center">
                                 <Database className="mx-auto mb-2 text-blue-400" />
                                 <h3 className="text-white font-medium">Data Sources</h3>
-                                <p className="text-xs text-slate-500 mt-1">Landsat, OpenStreetMap, DEM, Reports</p>
+                                <p className="text-xs text-text-muted mt-1">Landsat, OpenStreetMap, DEM, Reports</p>
                             </div>
                         </div>
 
@@ -34,9 +34,9 @@ export default function MethodologyPage() {
 
                         <div className="space-y-4">
                             <div className="bg-black/40 border border-white/20 p-4 rounded-xl text-center">
-                                <Layers className="mx-auto mb-2 text-purple-400" />
+                                <Layers className="mx-auto mb-2 text-mauve" />
                                 <h3 className="text-white font-medium">Spatial Analysis</h3>
-                                <p className="text-xs text-slate-500 mt-1">KDE (Density), HSA (Hotspots), Buffer (500m)</p>
+                                <p className="text-xs text-text-muted mt-1">KDE (Density), HSA (Hotspots), Buffer (500m)</p>
                             </div>
                         </div>
 
@@ -46,13 +46,13 @@ export default function MethodologyPage() {
                             <div className="bg-black/40 border border-white/20 p-4 rounded-xl text-center">
                                 <Sigma className="mx-auto mb-2 text-emerald-400" />
                                 <h3 className="text-white font-medium">Regression Modeling</h3>
-                                <p className="text-xs text-slate-500 mt-1">OLS (Global) & GWR (Local)</p>
+                                <p className="text-xs text-text-muted mt-1">OLS (Global) & GWR (Local)</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Background connector line */}
-                    <div className="absolute top-1/2 left-10 right-10 h-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 opacity-20 -z-0"></div>
+                    <div className="absolute top-1/2 left-10 right-10 h-0.5 bg-gradient-to-r from-primary via-mauve to-gold opacity-20 -z-0"></div>
                 </div>
             </section>
 
@@ -70,14 +70,14 @@ export default function MethodologyPage() {
                         { title: "Dist. to Water Bodies (DW-Dist)", desc: "Proximity to drainage/lakes reduces risk (negative correlation).", coef: "-0.45" },
                         { title: "Elevation (DEM)", desc: "Found to be statistically insignificant for flat terrains like Hanoi/Delhi.", coef: "N/A" },
                     ].map((item, i) => (
-                        <div key={i} className="bg-surface border border-white/10 p-6 rounded-xl hover:bg-white/5 transition-all">
+                        <div key={i} className="bg-surface border border-border p-6 rounded-xl hover:bg-white/5 transition-all">
                             <div className="flex justify-between items-start mb-3">
                                 <h3 className="font-bold text-white">{item.title}</h3>
-                                <span className={`text-xs font-mono px-2 py-1 rounded ${item.coef.includes('+') ? 'bg-red-500/20 text-red-400' : item.coef.includes('-') ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-400'}`}>
+                                <span className={`text-xs font-mono px-2 py-1 rounded ${item.coef.includes('+') ? 'bg-red-500/20 text-red-400' : item.coef.includes('-') ? 'bg-emerald-500/20 text-emerald-400' : 'bg-border text-text-muted'}`}>
                                     β: {item.coef}
                                 </span>
                             </div>
-                            <p className="text-sm text-slate-400">{item.desc}</p>
+                            <p className="text-sm text-text-muted">{item.desc}</p>
                         </div>
                     ))}
                 </div>
@@ -88,9 +88,9 @@ export default function MethodologyPage() {
                 <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                     <Database className="text-primary" /> Open Data Sources
                 </h2>
-                <div className="bg-surface border border-white/10 rounded-2xl overflow-hidden">
+                <div className="bg-surface border border-border rounded-2xl overflow-hidden">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-white/5 text-slate-300 font-medium">
+                        <thead className="bg-white/5 text-text-soft font-medium">
                             <tr>
                                 <th className="p-4">Data Type</th>
                                 <th className="p-4">Format</th>
@@ -98,7 +98,7 @@ export default function MethodologyPage() {
                                 <th className="p-4">Application</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5 text-slate-400">
+                        <tbody className="divide-y divide-white/5 text-text-muted">
                             <tr>
                                 <td className="p-4">Waterlogging Reports</td>
                                 <td className="p-4 font-mono text-xs">Text/News</td>

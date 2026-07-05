@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import { UploadCloud, CheckCircle2, Loader2, MapPin, AlertTriangle, FileVideo, ShieldAlert } from "lucide-react";
-import { useIncidents } from "@/context/IncidentContext";
+import { UploadCloud, CheckCircle2, Loader2, MapPin, AlertTriangle, ImagePlus, ShieldAlert } from "lucide-react";
 
 // Delhi NCR Approximate Bounds
 const DELHI_BOUNDS = {
@@ -16,11 +15,6 @@ const DELHI_BOUNDS = {
 
 export default function ReportsPage() {
     const router = useRouter();
-    // const { addIncident } = useIncidents();
-    // FALLBACK: Context disabled by user request. Using mock function to prevent crash.
-    const addIncident = (data: any) => {
-        console.log("Mock addIncident called (IncidentProvider disabled):", data);
-    };
 
     const [step, setStep] = useState<"form" | "uploading" | "success">("form");
 
@@ -33,7 +27,8 @@ export default function ReportsPage() {
     const [formData, setFormData] = useState({
         type: "Severe Waterlogging", // Default high priority
         description: "",
-        videoFile: null as File | null
+        imageFile: null as File | null,
+        imagePreview: "" as string
     });
 
     const detectLocation = () => {
@@ -70,31 +65,61 @@ export default function ReportsPage() {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setFormData({ ...formData, videoFile: e.target.files[0] });
+            const file = e.target.files[0];
+            const previewUrl = URL.createObjectURL(file);
+            setFormData({ ...formData, imageFile: file, imagePreview: previewUrl });
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const [submitError, setSubmitError] = useState("");
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (locStatus !== "success") return;
+        if (locStatus !== "success" || !formData.imageFile || !coords) return;
 
         setStep("uploading");
+        setSubmitError("");
 
-        // Simulate network delay and AI processing of video
-        setTimeout(() => {
-            addIncident({
-                loc: locationName || "Verified GPS Location",
-                type: formData.type,
-                severe: true, // Auto-flagged based on "video analysis"
-                description: formData.description
+        try {
+            // Step 1: Upload image to /analyze for AI processing
+            const analyzeForm = new FormData();
+            analyzeForm.append("file", formData.imageFile);
+
+            const analyzeRes = await fetch("http://localhost:8000/analyze", {
+                method: "POST",
+                body: analyzeForm,
             });
+
+            if (!analyzeRes.ok) throw new Error("Image analysis failed");
+            const analysisResult = await analyzeRes.json();
+
+            // Step 2: Submit the report with analysis result to /submit
+            const submitRes = await fetch("http://localhost:8000/submit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    location: locationName || `${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)}`,
+                    lat: coords.lat,
+                    lng: coords.lon,
+                    image_url: analysisResult.image_url || "",
+                    analysis_result: analysisResult,
+                    user_id: "citizen_report",
+                }),
+            });
+
+            if (!submitRes.ok) throw new Error("Report submission failed");
+
             setStep("success");
 
-            // Redirect after success
+            // Redirect to admin after success
             setTimeout(() => {
                 router.push("/admin");
             }, 2000);
-        }, 2000);
+        } catch (err: any) {
+            console.error("Submit error:", err);
+            setSubmitError(err.message || "Something went wrong. Is the backend running?");
+            setStep("form");
+        }
     };
 
     return (
@@ -106,32 +131,38 @@ export default function ReportsPage() {
 
             <div className="max-w-xl w-full">
                 <h1 className="text-3xl font-bold text-white mb-2">Report Incident</h1>
-                <p className="text-slate-400 mb-8">
-                    Submit a verified report. Location detection and video evidence are mandatory.
+                <p className="text-text-muted mb-8">
+                    Submit a verified report. Location detection and image evidence are mandatory.
                 </p>
 
-                <div className="bg-surface border border-white/10 rounded-2xl p-8 shadow-2xl">
+                <div className="bg-surface border border-border rounded-2xl p-8 shadow-2xl">
 
                     {step === "form" && (
                         <form onSubmit={handleSubmit} className="space-y-6">
 
+                            {submitError && (
+                                <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-lg text-red-400 text-sm flex items-center gap-2">
+                                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                                    {submitError}
+                                </div>
+                            )}
                             {/* 1. Mandatory Location Detection */}
-                            <div className="bg-black/30 p-4 rounded-xl border border-white/10">
-                                <label className="block text-sm font-medium text-slate-300 mb-3">
+                            <div className="bg-black/30 p-4 rounded-xl border border-border">
+                                <label className="block text-sm font-medium text-text-soft mb-3">
                                     1. Location Verification (Mandatory)
                                 </label>
 
                                 {locStatus === "idle" && (
                                     <div className="text-center">
-                                        <Button type="button" onClick={detectLocation} variant="outline" className="w-full border-dashed border-slate-600 text-slate-400 hover:text-white hover:border-white">
+                                        <Button type="button" onClick={detectLocation} variant="outline" className="w-full border-dashed border-slate-600 text-text-muted hover:text-white hover:border-white">
                                             <MapPin className="mr-2 h-4 w-4" /> Detect My Location
                                         </Button>
-                                        <p className="text-xs text-slate-500 mt-2"> GPS access required to verify you are in Delhi NCR.</p>
+                                        <p className="text-xs text-text-muted mt-2"> GPS access required to verify you are in Delhi NCR.</p>
                                     </div>
                                 )}
 
                                 {locStatus === "fetching" && (
-                                    <div className="flex items-center justify-center py-2 text-slate-400">
+                                    <div className="flex items-center justify-center py-2 text-text-muted">
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying coordinates...
                                     </div>
                                 )}
@@ -147,11 +178,28 @@ export default function ReportsPage() {
                                 )}
 
                                 {locStatus === "out-of-bounds" && (
-                                    <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-lg flex items-center text-red-400">
-                                        <ShieldAlert className="mr-2 h-5 w-5" />
-                                        <div>
-                                            <div className="font-bold text-sm">Location Denied</div>
-                                            <div className="text-xs opacity-80">You are outside the Delhi region. Report cannot be submitted.</div>
+                                    <div className="bg-red-500/10 border-2 border-red-500/40 p-5 rounded-xl text-red-400">
+                                        <div className="flex items-start gap-3">
+                                            <div className="bg-red-500/20 p-2 rounded-lg shrink-0">
+                                                <ShieldAlert className="h-6 w-6" />
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-base text-red-300">⚠ You are outside Delhi NCR</div>
+                                                <div className="text-sm opacity-90 mt-1">JalDrishti only accepts reports from within the Delhi NCR region. Your GPS coordinates indicate you are outside the service area.</div>
+                                                <div className="text-xs opacity-70 mt-2 font-mono">
+                                                    Your location: {coords?.lat.toFixed(4)}, {coords?.lon.toFixed(4)}
+                                                </div>
+                                                <div className="text-xs opacity-70 mt-1">
+                                                    Required: Lat {DELHI_BOUNDS.minLat}–{DELHI_BOUNDS.maxLat}, Lon {DELHI_BOUNDS.minLon}–{DELHI_BOUNDS.maxLon}
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setLocStatus("idle"); setCoords(null); }}
+                                                    className="mt-3 text-xs text-red-300 underline hover:text-white"
+                                                >
+                                                    Retry Location Detection
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -167,30 +215,32 @@ export default function ReportsPage() {
                             <div className={`space-y-6 transition-opacity duration-300 ${locStatus === 'success' ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">2. Video Evidence (Mandatory)</label>
+                                    <label className="block text-sm font-medium text-text-soft mb-2">2. Image Evidence (Mandatory)</label>
                                     <div className="relative">
                                         <div className="flex items-center justify-center w-full">
-                                            <label htmlFor="video-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-black/50 border-gray-600 hover:border-primary hover:bg-black/70">
-                                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                                    <FileVideo className="w-8 h-8 mb-3 text-slate-400" />
-                                                    <p className="text-sm text-slate-400">
-                                                        {formData.videoFile ? (
-                                                            <span className="text-primary font-bold">{formData.videoFile.name}</span>
-                                                        ) : (
-                                                            <span className="text-slate-400">Click to upload video of the area</span>
-                                                        )}
-                                                    </p>
-                                                </div>
-                                                <input id="video-upload" type="file" accept="video/*" className="hidden" onChange={handleFileChange} required />
+                                            <label htmlFor="image-upload" className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-lg cursor-pointer bg-black/50 border-gray-600 hover:border-primary hover:bg-black/70 overflow-hidden">
+                                                {formData.imagePreview ? (
+                                                    <img src={formData.imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                                        <ImagePlus className="w-8 h-8 mb-3 text-text-muted" />
+                                                        <p className="text-sm text-text-muted">Click to upload an image of the waterlogged area</p>
+                                                        <p className="text-xs text-text-muted mt-1">JPG, PNG supported</p>
+                                                    </div>
+                                                )}
+                                                <input id="image-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange} required />
                                             </label>
                                         </div>
+                                        {formData.imageFile && (
+                                            <p className="text-xs text-primary mt-2 font-medium">{formData.imageFile.name}</p>
+                                        )}
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">3. Incident Type</label>
+                                    <label className="block text-sm font-medium text-text-soft mb-2">3. Incident Type</label>
                                     <select
-                                        className="w-full bg-black/50 border border-white/10 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                        className="w-full bg-black/50 border border-border rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
                                         value={formData.type}
                                         onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                                     >
@@ -201,11 +251,11 @@ export default function ReportsPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">4. Description</label>
+                                    <label className="block text-sm font-medium text-text-soft mb-2">4. Description</label>
                                     <textarea
                                         rows={2}
                                         placeholder="Additional details..."
-                                        className="w-full bg-black/50 border border-white/10 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                        className="w-full bg-black/50 border border-border rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     />
@@ -213,8 +263,8 @@ export default function ReportsPage() {
 
                                 <Button
                                     type="submit"
-                                    className="w-full py-6 text-lg font-bold bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={locStatus !== "success" || !formData.videoFile}
+                                    className="w-full py-6 text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={locStatus !== "success" || !formData.imageFile}
                                 >
                                     <UploadCloud className="mr-2 h-5 w-5" /> Submit Verified Report
                                 </Button>
@@ -228,7 +278,7 @@ export default function ReportsPage() {
                             <Loader2 className="h-12 w-12 text-primary animate-spin" />
                             <div className="text-center">
                                 <h3 className="text-white font-medium text-lg">Uploading Proof</h3>
-                                <p className="text-slate-400">Analyzing video & verifying location metadata...</p>
+                                <p className="text-text-muted">Analyzing image & verifying location metadata...</p>
                             </div>
                         </div>
                     )}
@@ -240,12 +290,12 @@ export default function ReportsPage() {
                             </div>
                             <div className="text-center">
                                 <h3 className="text-white font-bold text-xl">Report Verified & Submitted</h3>
-                                <p className="text-emerald-400 mt-1">Geotagged Video Received.</p>
-                                <div className="mt-4 bg-white/5 p-3 rounded text-xs text-slate-400 font-mono">
+                                <p className="text-emerald-400 mt-1">Geotagged Image Received.</p>
+                                <div className="mt-4 bg-white/5 p-3 rounded text-xs text-text-muted font-mono">
                                     Coords: {coords?.lat.toFixed(4)}, {coords?.lon.toFixed(4)} <br />
                                     Region: Delhi NCR
                                 </div>
-                                <p className="text-slate-500 mt-4 text-sm">Redirecting...</p>
+                                <p className="text-text-muted mt-4 text-sm">Redirecting...</p>
                             </div>
                         </div>
                     )}

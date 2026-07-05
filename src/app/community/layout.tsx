@@ -3,7 +3,7 @@
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { WardRiskProvider } from "@/context/WardRiskContext";
 
-export default function AdminLayout({
+export default function CommunityLayout({
     children,
 }: {
     children: React.ReactNode;
@@ -19,4 +19,3 @@ export default function AdminLayout({
         </WardRiskProvider>
     );
 }
-

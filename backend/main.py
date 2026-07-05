@@ -232,10 +232,132 @@ class ForensicAnalyzer:
             print(f"Google Vision Error: {e}")
             return {"found_online": False, "source": "Google Vision Request Failed"}
 
-def detect_waterlogging_local(image):
+# Models tried in order; first one the HF inference API actually serves wins.
+HF_MODELS = [
+    "google/siglip2-so400m-patch14-384",
+    "google/siglip-so400m-patch14-384",
+    "google/siglip-base-patch16-224",
+    "openai/clip-vit-base-patch32",
+]
+
+# Contrastive prompts. Positive prompts describe waterlogging; the negatives give
+# CLIP/SigLIP something specific to peel probability mass away to (wet-but-fine,
+# water bodies, indoors) so we don't over-trigger.
+HF_POSITIVE_LABELS = [
+    "a flooded waterlogged street with standing water",
+    "a road covered in deep water",
+]
+HF_NEGATIVE_LABELS = [
+    "a dry street",
+    "a normal road with no water",
+    "a river, lake or ocean",
+    "an indoor scene",
+]
+
+def detect_waterlogging_hf(image_bytes):
+    hf_token = os.getenv("HF_TOKEN")
+    if not hf_token:
+        print("HF token not set (HF_TOKEN) — falling back to local OpenCV")
+        return None
+
+    # InferenceClient handles the current HF router URL + payload format for
+    # zero-shot image classification. Passing raw bytes; no manual base64/JSON.
+    from huggingface_hub import InferenceClient
+    # provider must be pinned: the default "auto" asks HF's provider-mapping API,
+    # which returns empty for these models (no third-party provider serves them)
+    # and crashes with StopIteration before any HTTP request is made.
+    client = InferenceClient(token=hf_token, timeout=15, provider="hf-inference")
+    candidate_labels = HF_POSITIVE_LABELS + HF_NEGATIVE_LABELS
+    positive_set = set(HF_POSITIVE_LABELS)
+
+    results = None
+    used_model = None
+    for model in HF_MODELS:
+        try:
+            results = client.zero_shot_image_classification(
+                image_bytes, candidate_labels=candidate_labels, model=model,
+            )
+            if results:
+                used_model = model
+                break
+            print(f"HF model {model} returned no predictions — trying next")
+        except Exception as e:
+            # Usually a 404 (model not served) or timeout; try the next model.
+            status = getattr(getattr(e, "response", None), "status_code", None)
+            print(f"HF model {model} failed [{type(e).__name__} status={status}]: {repr(e)} — trying next")
+
+    if not results:
+        print("All HF models failed — falling back to local OpenCV")
+        return None
+
+    # Scores across all labels sum to ~1; the probability mass on the positive
+    # prompts is our waterlogging confidence.
+    positive_mass = sum(r.score for r in results if r.label in positive_set)
+    confidence = positive_mass * 100
+    is_waterlogged = positive_mass > 0.5
+
+    return {
+        "waterlogged": is_waterlogged,
+        "confidence": round(confidence, 2),
+        "severity": "High" if confidence > 80 else "Moderate" if confidence > 50 else "Low",
+        "estimated_depth": "Unknown",
+        "method": "huggingface_clip",
+        "details": {"model": used_model},
+    }
+
+# --- Local zero-shot model (SigLIP via transformers) ---
+# HF's serverless API no longer serves any zero-shot-image-classification model
+# ("Model not supported by provider hf-inference"), so we run SigLIP locally.
+# Lazy singleton: first request downloads ~800MB then loads once per process.
+_ZS_MODEL = "google/siglip-base-patch16-224"
+_zs_pipeline = None
+
+def _get_zero_shot_pipeline():
+    global _zs_pipeline
+    if _zs_pipeline is None:
+        from transformers import pipeline
+        print(f"Loading local zero-shot model {_ZS_MODEL} (first run downloads it)...")
+        _zs_pipeline = pipeline("zero-shot-image-classification", model=_ZS_MODEL)
+        print("Local zero-shot model ready")
+    return _zs_pipeline
+
+def detect_waterlogging_siglip(image):
+    try:
+        pipe = _get_zero_shot_pipeline()
+    except Exception as e:
+        print(f"Local SigLIP unavailable ({type(e).__name__}: {e}) — falling back to OpenCV")
+        return None
+
+    try:
+        results = pipe(image, candidate_labels=HF_POSITIVE_LABELS + HF_NEGATIVE_LABELS)
+    except Exception as e:
+        print(f"Local SigLIP inference failed ({type(e).__name__}: {e}) — falling back to OpenCV")
+        return None
+
+    # SigLIP scores are independent sigmoids (they don't sum to 1), so normalize:
+    # confidence = positive mass / total mass. Works for softmax models too.
+    positive_set = set(HF_POSITIVE_LABELS)
+    pos = sum(r["score"] for r in results if r["label"] in positive_set)
+    total = sum(r["score"] for r in results)
+    ratio = pos / total if total > 0 else 0.0
+    confidence = ratio * 100
+    is_waterlogged = ratio > 0.5
+
+    return {
+        "waterlogged": is_waterlogged,
+        "confidence": round(confidence, 2),
+        "severity": "High" if confidence > 80 else "Moderate" if confidence > 50 else "Low",
+        "estimated_depth": "Unknown",
+        "method": "local_siglip",
+        "details": {"model": _ZS_MODEL},
+    }
+
+def detect_waterlogging_local(image, is_duplicate=None):
     # Forensic Check
     forensics = ForensicAnalyzer.check_metadata(image)
-    is_spam_duplicate = ForensicAnalyzer.check_duplicate(image)
+    # Reuse duplicate result if the caller already ran the check this request.
+    # Re-running check_duplicate on the same image marks it as its own duplicate.
+    is_spam_duplicate = is_duplicate if is_duplicate is not None else ForensicAnalyzer.check_duplicate(image)
     
     # Check Bing (Simulated call)
     # bing_check = ForensicAnalyzer.check_bing_web_search(image)
@@ -327,37 +449,25 @@ async def analyze_image(file: UploadFile = File(...)):
     # URL for frontend to access
     image_url = f"http://localhost:8000/static/uploads/{filename}"
 
-    # Try Azure first
-    if computervision_client:
-        result = detect_waterlogging_azure(contents)
-        # Debugging: Print Azure result
-        if result:
-            print(f"[DEBUG] Azure Result: Waterlogged={result.get('waterlogged')}, Tags={result.get('details', {}).get('tags')}")
-        
-        if result and "error" not in result:
-            # HYBRID LOGIC: If Azure says "No", double check with OpenCV
-            if not result["waterlogged"]:
-                 print("[DEBUG] Azure missed it. Running Hybrid Fallback...")
-                 # Run Local Check
-                 image = Image.open(io.BytesIO(contents))
-                 local_result = detect_waterlogging_local(image)
-                 print(f"[DEBUG] Local Fallback Result: Waterlogged={local_result.get('waterlogged')}, Conf={local_result.get('confidence')}")
-                 
-                 if local_result["waterlogged"]:
-                     # Azure missed it, but Local found it -> Trust Local (Safety First)
-                     local_result["method"] = "Hybrid (Azure missed, OpenCV detected)"
-                     local_result["details"] = result.get("details", {})
-                     local_result["details"]["azure_miss"] = "Azure failed to detect water."
-                     local_result["image_url"] = image_url
-                     return local_result
-            
-            result["method"] = "azure_api"
-            result["image_url"] = image_url
-            return result
-            
-    # Fallback to Local (if Azure not configured or errored)
     image = Image.open(io.BytesIO(contents))
-    local_result = detect_waterlogging_local(image)
+    forensics = ForensicAnalyzer.check_metadata(image)
+    is_spam_duplicate = ForensicAnalyzer.check_duplicate(image)
+
+    # Local SigLIP zero-shot (HF serverless API no longer serves these models)
+    hf_result = detect_waterlogging_siglip(image)
+
+    if hf_result:
+        hf_result["image_url"] = image_url
+        hf_result["forensics"] = {
+            "source": forensics.get("inference", "Unknown"),
+            "camera": forensics.get("camera_model", "Unknown"),
+            "is_duplicate": is_spam_duplicate
+        }
+        return hf_result
+
+    # Fallback to Local — pass the duplicate flag already computed above
+    # so the same image isn't flagged as a duplicate of itself.
+    local_result = detect_waterlogging_local(image, is_duplicate=is_spam_duplicate)
     local_result["image_url"] = image_url
     return local_result
 
@@ -404,12 +514,14 @@ class Reaction(BaseModel):
     type: str # "agree" or "disagree"
 
 @app.get("/reports")
-def get_reports(status: str = None):
-    """Fetches reports. Optionally filter by status."""
+def get_reports(status: str = None, all: bool = False):
+    """Fetches reports. Optionally filter by status. Use all=true for admin view."""
+    if all:
+        return reports_db
     if status:
         return [r for r in reports_db if r.admin_status == status]
     
-    # By default, exclude "auto_rejected" so they don't clutter Admin
+    # By default, exclude "auto_rejected" so they don't clutter public feeds
     return [r for r in reports_db if r.admin_status != "auto_rejected"]
 
 @app.post("/submit")
@@ -417,28 +529,30 @@ def submit_report(submission: ReportSubmission):
     """Saves a new report after AI analysis."""
     analysis = submission.analysis_result
     forensics = analysis.get("forensics", {})
-    
+
+    # Low-confidence gate: below 40% we don't trust the "waterlogged" label.
+    # Override it so the report is not shown/treated as waterlogged.
+    CONFIDENCE_THRESHOLD = 40.0
+    if analysis.get("confidence", 0) < CONFIDENCE_THRESHOLD:
+        analysis["waterlogged"] = False
+
     # Auto-flag spam
     is_spam = False
     admin_status = "pending"
+    is_waterlogged = analysis.get("waterlogged", False)
 
     # 1. Duplicate Check
     if forensics.get("is_duplicate"):
         is_spam = True
-        admin_status = "auto_rejected" # Hide from admin queue
         
     # 2. Web Check
     if analysis.get("found_online"):
         is_spam = True
-        # User requested web found images to alert but not explicitly "hide" from admin, 
-        # but said "alerts of spam / duplicate ... should only pin ... if confirmed".
-        # For duplicates specifically: "should not go the admin".
-        # For web images: "alerts ... generated".
-        # I'll keep web images as pending but flagged spam.
-        # Only duplicates get auto_rejected.
 
-    if "Web" in forensics.get("source", "") and not "Confirmed" in forensics.get("source", ""):
-        pass
+    # Only auto-reject if the image is NOT waterlogged.
+    # Waterlogged images always go to admin for review, even if flagged as spam/duplicate.
+    if not is_waterlogged:
+        admin_status = "auto_rejected"
     
     new_report = Report(
         id=str(uuid.uuid4()),

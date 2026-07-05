@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { IncidentProvider } from "../context/IncidentContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -13,8 +12,6 @@ export const metadata: Metadata = {
   description: "3D Water-logging Prediction Dashboard",
 };
 
-import { Sidebar } from "@/components/dashboard/Sidebar";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,11 +20,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} antialiased bg-black text-white`}
+        className={`${inter.variable} antialiased bg-background text-text-strong`}
       >
-        {/* <IncidentProvider> */}
         {children}
-        {/* </IncidentProvider> */}
       </body>
     </html>
   );

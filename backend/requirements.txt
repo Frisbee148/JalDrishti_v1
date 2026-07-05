@@ -8,6 +8,9 @@ azure-cognitiveservices-vision-computervision
 azure-cognitiveservices-search-visualsearch
 python-dotenv
 imagehash
+huggingface_hub
+transformers
+torch
 google-search-results
 requests
 scikit-learn
